@@ -22,31 +22,30 @@ func NewAmapProvider(key string) *AmapProvider {
 
 func (p *AmapProvider) RegionSync(call func(r *Region) error) error {
 	lstCallAmap := time.Now()
-	arr, err := p.cli.District(amap.China, 1, 2)
-	if err != nil {
-		return err
-	}
-	if len(arr) == 0 {
-		hlog.Err("hyper.addr.amap.RegionSync: len(arr) == 0")
-		return fmt.Errorf("no any data response from amap")
-	}
-	for _, country := range arr {
-		if err := call(p.convertDistrict(country)); err != nil {
+	page := 1
+	for true {
+		callAmapInterval := time.Now().Sub(lstCallAmap)
+		if callAmapInterval < 1500*time.Millisecond {
+			time.Sleep(1500*time.Millisecond - callAmapInterval)
+		}
+		lstCallAmap = time.Now()
+		arr, err := p.cli.District(amap.China, page, 1)
+		if err != nil {
 			return err
 		}
-		if len(country.Districts) == 0 {
-			hlog.Err("hyper.addr.amap.RegionSync: len(country.Districts) == 0")
-			return fmt.Errorf("no any districts with country")
+		if len(arr) == 0 {
+			break
 		}
-		for _, province := range country.Districts {
-			if err := call(p.convertDistrict(province)); err != nil {
+		for _, country := range arr {
+			if err := call(p.convertDistrict(country)); err != nil {
 				return err
 			}
-			if len(province.Districts) == 0 {
-				continue
+			if len(country.Districts) == 0 {
+				hlog.Err("hyper.addr.amap.RegionSync: len(country.Districts) == 0")
+				return fmt.Errorf("no any districts with country")
 			}
-			for _, city := range province.Districts {
-				if err := call(p.convertDistrict(city)); err != nil {
+			for _, province := range country.Districts {
+				if err := call(p.convertDistrict(province)); err != nil {
 					return err
 				}
 				callAmapInterval := time.Now().Sub(lstCallAmap)
@@ -54,12 +53,13 @@ func (p *AmapProvider) RegionSync(call func(r *Region) error) error {
 					time.Sleep(1500*time.Millisecond - callAmapInterval)
 				}
 				lstCallAmap = time.Now()
-				err := p.doLoadRegion(city.Adcode, call)
+				err := p.doLoadRegion(province.Adcode, call)
 				if err != nil {
 					return err
 				}
 			}
 		}
+		page += 1
 	}
 	return nil
 }
@@ -79,16 +79,24 @@ func (p *AmapProvider) doLoadRegion(adCode string, call func(r *Region) error) e
 			if len(item.Districts) == 0 {
 				continue
 			}
-			for _, child := range item.Districts {
-				if err := call(p.convertDistrict(child)); err != nil {
+			for _, one := range item.Districts {
+				if err := call(p.convertDistrict(one)); err != nil {
 					return err
 				}
-				if len(child.Districts) == 0 {
+				if len(one.Districts) == 0 {
 					continue
 				}
-				for _, grandchild := range item.Districts {
-					if err := call(p.convertDistrict(grandchild)); err != nil {
+				for _, two := range one.Districts {
+					if err := call(p.convertDistrict(two)); err != nil {
 						return err
+					}
+					if len(two.Districts) == 0 {
+						continue
+					}
+					for _, three := range two.Districts {
+						if err := call(p.convertDistrict(three)); err != nil {
+							return err
+						}
 					}
 				}
 			}
