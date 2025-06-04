@@ -19,9 +19,11 @@ const (
 )
 
 type Region struct {
-	Code  string `json:"code"`
-	Name  string `json:"name"`
-	Level Level  `json:"level"`
+	Map     Map    `json:"map"`
+	Code    string `json:"code"`
+	Name    string `json:"name"`
+	Level   Level  `json:"level"`
+	Address string `json:"address"`
 }
 
 type MapProvider interface {

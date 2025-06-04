@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/hootuu/helix/components/htree"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyper/address/maps"
 	"github.com/hootuu/hyper/address/maps/amap"
@@ -11,12 +12,9 @@ import (
 func main() {
 	p := maps.NewAmapProvider("213c33139661d94b70f97c4646744fab")
 	s := time.Now()
-	err := p.RegionSync(func(r *maps.Region) error {
+	err := p.RegionSync(func(id htree.ID, r *maps.Region) (htree.ID, error) {
 		fmt.Println(hjson.MustToString(r))
-		//if r.Name == "太湖县" {
-		//	os.Exit(-1)
-		//}
-		return nil
+		return 0, nil
 	})
 	fmt.Println(err)
 	fmt.Println("elapse ms: ", time.Now().Sub(s).Milliseconds()/1000)

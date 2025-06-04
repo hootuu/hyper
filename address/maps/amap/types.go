@@ -15,5 +15,6 @@ type District struct {
 	Adcode    string      `json:"adcode"`
 	Name      string      `json:"name"`
 	Level     string      `json:"level"`
+	Address   string      `json:"address"`
 	Districts []*District `json:"districts"`
 }
