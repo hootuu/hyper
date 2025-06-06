@@ -5,9 +5,11 @@ import (
 	"gorm.io/datatypes"
 )
 
+type ID = string
+
 type BrM struct {
 	hpg.Basic
-	ID          string         `gorm:"column:id;primaryKey;size:32;"`
+	ID          ID             `gorm:"column:id;primaryKey;size:32;"`
 	Name        string         `gorm:"column:name;index;size:100;"`
 	Intro       string         `gorm:"column:intro;size:1000;"`
 	Description string         `gorm:"column:description;type:text;"`
