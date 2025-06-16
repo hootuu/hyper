@@ -17,25 +17,16 @@ func NewCategory(code string) (*Category, error) {
 	return cate, nil
 }
 
-func Frontend() *Category {
-	return gFrontend
+func Default() *Category {
+	return gDefault
 }
 
-func Backend() *Category {
-	return gBackend
-}
-
-var gFrontend *Category
-var gBackend *Category
+var gDefault *Category
 
 func init() {
 	helix.Use(helix.BuildHelix("hyper_category", func() (context.Context, error) {
 		var err error
-		gFrontend, err = NewCategory("hyper_category_frontend")
-		if err != nil {
-			return nil, err
-		}
-		gBackend, err = NewCategory("hyper_category_backend")
+		gDefault, err = NewCategory("hyper_category_cat")
 		if err != nil {
 			return nil, err
 		}

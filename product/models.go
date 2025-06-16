@@ -5,6 +5,7 @@ import (
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/brand"
 	"github.com/hootuu/hyper/category"
+	"github.com/hootuu/hyper/spec"
 	"gorm.io/datatypes"
 )
 
@@ -12,8 +13,7 @@ type SpuM struct {
 	hpg.Basic
 	Collar    collar.Collar  `gorm:"column:collar;index;size:64;"`
 	ID        SpuID          `gorm:"column:id;primaryKey;size:32;"`
-	Frontend  category.ID    `gorm:"column:frontend;index;"`
-	Backend   category.ID    `gorm:"column:backend;index;"`
+	Category  category.ID    `gorm:"column:category;index;"`
 	Name      string         `gorm:"column:name;size:100;"`
 	Intro     string         `gorm:"column:intro;size:1000;"`
 	Brand     brand.ID       `gorm:"column:brand;size:32;"`
@@ -28,15 +28,27 @@ func (m *SpuM) TableName() string {
 
 type SpuSpecM struct {
 	hpg.Basic
-	Spu   SpuID  `gorm:"column:spu;uniqueIndex:uk_spu_spec;size:32;"`
-	Spec  SpecID `gorm:"column:spec;uniqueIndex:uk_spu_spec;"`
-	Name  string `gorm:"column:name;size:50;"`
-	Intro string `gorm:"column:intro;size:300;"`
-	Key   bool   `gorm:"column:is_key;"`
+	Spu  SpuID   `gorm:"column:spu;uniqueIndex:uk_spu_spec;size:32;"`
+	Spec spec.ID `gorm:"column:spec;uniqueIndex:uk_spu_spec;"`
+	Seq  int     `gorm:"column:seq;"`
 }
 
 func (m *SpuSpecM) TableName() string {
 	return "hyper_product_spu_spec"
+}
+
+type SpuSpecOptM struct {
+	hpg.Basic
+	ID    spec.OptID     `gorm:"column:id;primaryKey;"`
+	Spu   SpuID          `gorm:"column:spu;uniqueIndex:uk_spu_spec;size:32;"`
+	Spec  spec.ID        `gorm:"column:spec;uniqueIndex:uk_spu_spec;"`
+	Label string         `gorm:"column:name;size:100;"`
+	Media datatypes.JSON `gorm:"column:media;type:jsonb;"` //media.More
+	Seq   int            `gorm:"column:seq;"`
+}
+
+func (m *SpuSpecOptM) TableName() string {
+	return "hyper_product_spu_spec_opt"
 }
 
 type SkuM struct {
@@ -51,10 +63,8 @@ func (m *SkuM) TableName() string {
 
 type SkuSpecM struct {
 	hpg.Basic
-	Sku   SkuID          `gorm:"column:sku;uniqueIndex:uk_sku_spec;size:32;"`
-	Spec  SpecID         `gorm:"column:spec;uniqueIndex:uk_sku_spec;"`
-	Label string         `gorm:"column:name;size:100;"`
-	Media datatypes.JSON `gorm:"column:media;type:jsonb;"` //media.More
+	Sku     SkuID      `gorm:"column:sku;uniqueIndex:uk_sku_spec;size:32;"`
+	SpecOpt spec.OptID `gorm:"column:spec_opt;uniqueIndex:uk_sku_spec;"`
 }
 
 func (m *SkuSpecM) TableName() string {

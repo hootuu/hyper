@@ -6,14 +6,14 @@ import (
 	"github.com/hootuu/helix/components/zplt"
 	"github.com/hootuu/helix/helix"
 	"github.com/hootuu/hyle/data/hjson"
-	"github.com/hootuu/hyle/hypes"
+	"github.com/hootuu/hyle/hypes/media"
 )
 
 func Add(
 	person sattva.Identification,
 	title string,
 	desc string,
-	media hypes.MediaDict,
+	media media.Dict,
 ) (string, error) {
 	fbM, err := addFeedback(&FbM{
 		Person:      person,

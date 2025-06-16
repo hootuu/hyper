@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hootuu/helix/helix"
-	"github.com/hootuu/hyle/hypes"
+	"github.com/hootuu/hyle/hypes/media"
 	"github.com/hootuu/hyper/feedback"
 )
 
@@ -12,16 +12,18 @@ func main() {
 		_, _ = feedback.Add("abcd",
 			"feedback-test-2",
 			"feedback-desc",
-			hypes.NewMediaDict().PutAppend("main", &hypes.Media{
-				Type: hypes.MediaTypeVideo,
+			media.NewDict().Put("main", &media.Media{
+				Type: media.ImageType,
 				Link: "https://www.abc.com/def.jpg",
 			}),
 		)
 		_, _ = feedback.Add("abcd",
 			"feedback-test-3",
 			"feedback-desc",
-			hypes.NewMediaDict().PutAppend("main",
-				hypes.NewMedia(hypes.MediaTypeVideo, "https://www.abc.com/def.jpg").SetMeta("size", "120")),
+			media.NewDict().Put("main", &media.Media{
+				Type: media.ImageType,
+				Link: "https://www.abc.com/def.jpg",
+			}),
 		)
 	})
 	helix.Startup()

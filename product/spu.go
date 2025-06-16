@@ -7,6 +7,7 @@ import (
 	"github.com/hootuu/helix/storage/hpg"
 	"github.com/hootuu/hyle/hlog"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 var gSpuIdGenerator hnid.Generator
@@ -16,7 +17,7 @@ func initSpuIdGenerator() error {
 	gSpuIdGenerator, err = hnid.NewGenerator("hyper_spu_id",
 		hnid.NewOptions(1, 6).
 			SetTimestamp(hnid.Minute, false).
-			SetAutoInc(8, 1, 999999, 1000),
+			SetAutoInc(6, 1, 999999, 1000),
 	)
 	if err != nil {
 		return err
@@ -25,13 +26,17 @@ func initSpuIdGenerator() error {
 }
 
 func CreateSpu(spuM *SpuM) (*SpuM, error) {
+	return createSpu(zplt.HelixPgDB().PG(), spuM)
+}
+
+func createSpu(tx *gorm.DB, spuM *SpuM) (*SpuM, error) {
 	if spuM.Name == "" {
 		return nil, errors.New("require Name")
 	}
 	spuM.ID = gSpuIdGenerator.NextString()
-	err := hpg.Create[SpuM](zplt.HelixPgDB().PG(), spuM)
+	err := hpg.Create[SpuM](tx, spuM)
 	if err != nil {
-		hlog.Err("hyper.product.CreateSpu", zap.Error(err))
+		hlog.Err("hyper.product.createSpu", zap.Error(err))
 		return nil, err
 	}
 	return spuM, nil
