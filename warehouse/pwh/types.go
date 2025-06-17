@@ -5,6 +5,6 @@ type ID = uint64
 type Direction byte
 
 const (
-	In  Direction = 1
-	Out Direction = 0
+	DirectionIn  Direction = 1
+	DirectionOut Direction = 0
 )

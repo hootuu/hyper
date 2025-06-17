@@ -2,6 +2,7 @@ package pwh
 
 import (
 	"github.com/hootuu/helix/storage/hpg"
+	"gorm.io/datatypes"
 )
 
 type PhysicalWhM struct {
@@ -30,14 +31,12 @@ func (m *PhysicalSkuM) TableName() string {
 
 type PhysicalInOutM struct {
 	hpg.Basic
-	ID        uint64    `gorm:"column:id;primaryKey;"`
-	PWH       uint64    `gorm:"column:pwh;index;"`
-	SKU       uint64    `gorm:"column:sku;index;"`
-	Direction Direction `gorm:"column:direction;"`
-	Quantity  uint64    `gorm:"column:quantity;"`
-	Price     uint64    `gorm:"column:price;"`
-	Memo      string    `gorm:"column:memo;size:100;"`
-	Collar    string    `gorm:"column:link;size:64;"`
+	PWH       uint64         `gorm:"column:pwh;index;"`
+	SKU       uint64         `gorm:"column:sku;index;"`
+	Direction Direction      `gorm:"column:direction;"`
+	Quantity  uint64         `gorm:"column:quantity;"`
+	Price     uint64         `gorm:"column:price;"`
+	Meta      datatypes.JSON `gorm:"column:meta;type:jsonb;"`
 }
 
 func (m *PhysicalInOutM) TableName() string {
