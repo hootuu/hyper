@@ -157,6 +157,118 @@ func Out(ctx context.Context, p IntoOutParas) error {
 	return nil
 }
 
+type LockUnlockParas struct {
+	PwhID    ID        `json:"pwh_id"`
+	SkuID    uint64    `json:"sku_id"`
+	Quantity uint64    `json:"quantity"`
+	Meta     dict.Dict `json:"meta"`
+}
+
+func (p LockUnlockParas) Validate() error {
+	if p.PwhID == 0 {
+		return fmt.Errorf("pwh_id is required")
+	}
+	if p.SkuID == 0 {
+		return fmt.Errorf("require sku id")
+	}
+	if p.Quantity == 0 {
+		return fmt.Errorf("require quantity")
+	}
+	return nil
+}
+
+func Lock(ctx context.Context, p LockUnlockParas) error {
+	if err := p.Validate(); err != nil {
+		return err
+	}
+	tx := db(ctx)
+	bPwhExist, err := hpg.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
+	if err != nil {
+		return err
+	}
+	if !bPwhExist {
+		return fmt.Errorf("not exist pwh: %d", p.PwhID)
+	}
+	pwhSkuM, err := hpg.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
+	if err != nil {
+		return err
+	}
+	if pwhSkuM.Available < p.Quantity {
+		return fmt.Errorf("no available quantity")
+	}
+	err = hpg.Tx(tx, func(tx *gorm.DB) error {
+		mut := map[string]interface{}{
+			"available": gorm.Expr("available - ?", p.Quantity),
+			"locked":    gorm.Expr("locked + ?", p.Quantity),
+			"version":   gorm.Expr("version + 1"),
+		}
+		err = hpg.Update[PhysicalSkuM](tx, mut,
+			"pwh = ? AND sku = ? AND version = ?", p.PwhID, p.SkuID, pwhSkuM.Version)
+		if err != nil {
+			return err
+		}
+		err = hpg.Create[PhysicalLockUnlockM](tx, &PhysicalLockUnlockM{
+			PWH:       p.PwhID,
+			SKU:       p.SkuID,
+			Direction: DirectionLock,
+			Quantity:  p.Quantity,
+			Meta:      hjson.MustToBytes(p.Meta),
+		})
+		return nil
+	})
+	return nil
+}
+
+func Unlock(ctx context.Context, p LockUnlockParas) error {
+	if err := p.Validate(); err != nil {
+		return err
+	}
+	tx := db(ctx)
+	bPwhExist, err := hpg.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
+	if err != nil {
+		return err
+	}
+	if !bPwhExist {
+		return fmt.Errorf("not exist pwh: %d", p.PwhID)
+	}
+	pwhSkuM, err := hpg.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
+	if err != nil {
+		return err
+	}
+	if pwhSkuM.Locked < p.Quantity {
+		return fmt.Errorf("no locked quantity")
+	}
+	err = hpg.Tx(tx, func(tx *gorm.DB) error {
+		mut := map[string]interface{}{
+			"available": gorm.Expr("available + ?", p.Quantity),
+			"locked":    gorm.Expr("locked - ?", p.Quantity),
+			"version":   gorm.Expr("version + 1"),
+		}
+		err = hpg.Update[PhysicalSkuM](tx, mut,
+			"pwh = ? AND sku = ? AND version = ?", p.PwhID, p.SkuID, pwhSkuM.Version)
+		if err != nil {
+			return err
+		}
+		err = hpg.Create[PhysicalLockUnlockM](tx, &PhysicalLockUnlockM{
+			PWH:       p.PwhID,
+			SKU:       p.SkuID,
+			Direction: DirectionUnlock,
+			Quantity:  p.Quantity,
+			Meta:      hjson.MustToBytes(p.Meta),
+		})
+		return nil
+	})
+	return nil
+}
+
+func GetSku(ctx context.Context, pwhID ID, skuID uint64) (*PhysicalSkuM, error) {
+	pwhSkuM, err := hpg.Get[PhysicalSkuM](db(ctx), "pwh = ? AND sku = ?", pwhID, skuID)
+	if err != nil {
+		return nil, err
+	}
+	return pwhSkuM, nil
+}
+
 func db(ctx context.Context) *gorm.DB {
 	tx := hpg.CtxTx(ctx)
 	if tx == nil {

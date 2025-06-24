@@ -42,3 +42,16 @@ type PhysicalInOutM struct {
 func (m *PhysicalInOutM) TableName() string {
 	return "hyper_warehouse_pwh_in_out"
 }
+
+type PhysicalLockUnlockM struct {
+	hpg.Basic
+	PWH       uint64         `gorm:"column:pwh;index;"`
+	SKU       uint64         `gorm:"column:sku;index;"`
+	Direction Direction      `gorm:"column:direction;"`
+	Quantity  uint64         `gorm:"column:quantity;"`
+	Meta      datatypes.JSON `gorm:"column:meta;type:jsonb;"`
+}
+
+func (m *PhysicalLockUnlockM) TableName() string {
+	return "hyper_warehouse_pwh_lock_unlock"
+}
