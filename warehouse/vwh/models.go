@@ -1,14 +1,14 @@
 package vwh
 
 import (
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyper/sku"
 	"github.com/hootuu/hyper/warehouse/pwh"
 	"gorm.io/datatypes"
 )
 
 type VirtualWhM struct {
-	hpg.Basic
+	hdb.Basic
 	ID     ID             `gorm:"column:id;primaryKey;"`
 	Collar string         `gorm:"column:collar;uniqueIndex;size:64;"`
 	Meta   datatypes.JSON `gorm:"column:meta;type:jsonb;"`
@@ -19,7 +19,7 @@ func (m *VirtualWhM) TableName() string {
 }
 
 type VirtualWhSrcM struct {
-	hpg.Basic
+	hdb.Basic
 	Vwh           ID             `gorm:"column:vwh;uniqueIndex:uk_vwh_pwh;"`
 	Pwh           pwh.ID         `gorm:"column:pwh;uniqueIndex:uk_vwh_pwh;"`
 	PricingType   string         `gorm:"column:pricing_type;size:64;"`
@@ -33,13 +33,13 @@ func (m *VirtualWhSrcM) TableName() string {
 }
 
 type VirtualWhSkuM struct {
-	hpg.Basic
+	hdb.Basic
 	Vwh       ID          `gorm:"column:vwh;uniqueIndex:uk_vwh_pwh_sku;"`
 	Sku       sku.ID      `gorm:"column:sku;uniqueIndex:uk_vwh_pwh_sku;"`
 	Pwh       pwh.ID      `gorm:"column:pwh;uniqueIndex:uk_vwh_pwh_sku;"`
 	Price     uint64      `gorm:"column:price;"`
 	Inventory uint64      `gorm:"column:inventory;"`
-	Version   hpg.Version `gorm:"column:version;"`
+	Version   hdb.Version `gorm:"column:version;"`
 }
 
 func (m *VirtualWhSkuM) TableName() string {

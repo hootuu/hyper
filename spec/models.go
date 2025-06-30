@@ -1,12 +1,12 @@
 package spec
 
 import (
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyper/category"
 )
 
 type CatSpecM struct {
-	hpg.Basic
+	hdb.Basic
 	ID       ID          `gorm:"column:id;primaryKey;"`
 	Category category.ID `gorm:"column:category;uniqueIndex:uk_cat_name;"`
 	Name     string      `gorm:"column:name;uniqueIndex:uk_cat_name;not null;size:32;"`

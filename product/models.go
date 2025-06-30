@@ -1,7 +1,7 @@
 package product
 
 import (
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/brand"
 	"github.com/hootuu/hyper/category"
@@ -10,14 +10,14 @@ import (
 )
 
 type SpuM struct {
-	hpg.Basic
+	hdb.Basic
 	Collar    collar.Collar  `gorm:"column:collar;index;size:64;"`
 	ID        SpuID          `gorm:"column:id;primaryKey;size:32;"`
 	Category  category.ID    `gorm:"column:category;index;"`
 	Name      string         `gorm:"column:name;size:100;"`
 	Intro     string         `gorm:"column:intro;size:1000;"`
 	Brand     brand.ID       `gorm:"column:brand;size:32;"`
-	Version   hpg.Version    `gorm:"column:version;"`
+	Version   hdb.Version    `gorm:"column:version;"`
 	MainMedia datatypes.JSON `gorm:"column:main_media;type:jsonb;"` //media.More
 	MoreMedia datatypes.JSON `gorm:"column:more_media;type:jsonb;"` //media.Dict
 }
@@ -27,7 +27,7 @@ func (m *SpuM) TableName() string {
 }
 
 type SpuSpecM struct {
-	hpg.Basic
+	hdb.Basic
 	Spu  SpuID   `gorm:"column:spu;uniqueIndex:uk_spu_spec;size:32;"`
 	Spec spec.ID `gorm:"column:spec;uniqueIndex:uk_spu_spec;"`
 	Seq  int     `gorm:"column:seq;"`
@@ -38,7 +38,7 @@ func (m *SpuSpecM) TableName() string {
 }
 
 type SpuSpecOptM struct {
-	hpg.Basic
+	hdb.Basic
 	ID    spec.OptID     `gorm:"column:id;primaryKey;"`
 	Spu   SpuID          `gorm:"column:spu;uniqueIndex:uk_spu_spec;size:32;"`
 	Spec  spec.ID        `gorm:"column:spec;uniqueIndex:uk_spu_spec;"`
@@ -52,7 +52,7 @@ func (m *SpuSpecOptM) TableName() string {
 }
 
 type SkuM struct {
-	hpg.Basic
+	hdb.Basic
 	ID  SkuID `gorm:"column:id;primaryKey;size:32;"`
 	Spu SpuID `gorm:"column:spu;index;size:32;"`
 }
@@ -62,7 +62,7 @@ func (m *SkuM) TableName() string {
 }
 
 type SkuSpecM struct {
-	hpg.Basic
+	hdb.Basic
 	Sku     SkuID      `gorm:"column:sku;uniqueIndex:uk_sku_spec;size:32;"`
 	SpecOpt spec.OptID `gorm:"column:spec_opt;uniqueIndex:uk_sku_spec;"`
 }

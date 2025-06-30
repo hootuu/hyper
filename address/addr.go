@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/hootuu/helix/components/sattva"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/idx"
 	"github.com/hootuu/hyle/hcfg"
 	"github.com/hootuu/hyle/hlog"
@@ -36,7 +36,7 @@ func addAddr(m *AddrM) (*AddrM, error) {
 	if err := verifyAddr(m); err != nil {
 		return nil, err
 	}
-	total, err := hpg.Count[AddrM](zplt.HelixPgDB().PG(), "owner = ?", m.Owner)
+	total, err := hdb.Count[AddrM](zplt.HelixPgDB().PG(), "owner = ?", m.Owner)
 	if err != nil {
 		hlog.Err("hyper.address.addAddr: Count", zap.Error(err))
 		return nil, err
@@ -46,22 +46,22 @@ func addAddr(m *AddrM) (*AddrM, error) {
 		return nil, fmt.Errorf("the maximum number of storage addresses is %d: %d", addrMax, total)
 	}
 
-	regionM, err := hpg.MustGet[RegionM](zplt.HelixPgDB().PG(), "id = ?", m.Region)
+	regionM, err := hdb.MustGet[RegionM](zplt.HelixPgDB().PG(), "id = ?", m.Region)
 	if err != nil {
 		return nil, err
 	}
 	m.ID = idx.New()
 	m.FullAddr = regionM.Address + m.Addr
-	err = hpg.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
+	err = hdb.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
 		if m.Default {
-			err := hpg.Update[AddrM](tx, map[string]any{
+			err := hdb.Update[AddrM](tx, map[string]any{
 				"is_default": false,
 			}, "owner = ?", m.Owner)
 			if err != nil {
 				return err
 			}
 		}
-		err := hpg.Create[AddrM](zplt.HelixPgDB().PG(), m)
+		err := hdb.Create[AddrM](zplt.HelixPgDB().PG(), m)
 		if err != nil {
 			hlog.Err("hyper.address.addAddr: Create", zap.Error(err))
 			return err
@@ -79,7 +79,7 @@ func mutAddr(mutM *AddrM) error {
 	if err := verifyAddr(mutM); err != nil {
 		return err
 	}
-	dbM, err := hpg.Get[AddrM](zplt.HelixPgDB().PG(), "id = ?", mutM.ID)
+	dbM, err := hdb.Get[AddrM](zplt.HelixPgDB().PG(), "id = ?", mutM.ID)
 	if err != nil {
 		hlog.Err("hyper.address.mutAddr: Get", zap.Error(err))
 		return err
@@ -91,7 +91,7 @@ func mutAddr(mutM *AddrM) error {
 	if dbM.Region != mutM.Region {
 		mut["region"] = mutM.Region
 
-		regionM, err := hpg.MustGet[RegionM](zplt.HelixPgDB().PG(), "id = ?", mutM.Region)
+		regionM, err := hdb.MustGet[RegionM](zplt.HelixPgDB().PG(), "id = ?", mutM.Region)
 		if err != nil {
 			return err
 		}
@@ -115,16 +115,16 @@ func mutAddr(mutM *AddrM) error {
 	if dbM.Default != mutM.Default {
 		mut["is_default"] = mutM.Default
 	}
-	err = hpg.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
+	err = hdb.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
 		if mutM.Default {
-			err := hpg.Update[AddrM](tx, map[string]any{
+			err := hdb.Update[AddrM](tx, map[string]any{
 				"is_default": false,
 			}, "owner = ?", mutM.Owner)
 			if err != nil {
 				return err
 			}
 		}
-		err := hpg.Update[AddrM](zplt.HelixPgDB().PG(), mut, "id = ?", mutM.ID)
+		err := hdb.Update[AddrM](zplt.HelixPgDB().PG(), mut, "id = ?", mutM.ID)
 		if err != nil {
 			hlog.Err("hyper.address.addAddr: Update", zap.Error(err))
 			return err
@@ -141,7 +141,7 @@ func useAddr(id string) error {
 	mut := map[string]any{
 		"usage": gorm.Expr("usage+1"),
 	}
-	err := hpg.Update[AddrM](zplt.HelixPgDB().PG(), mut, "id = ?", id)
+	err := hdb.Update[AddrM](zplt.HelixPgDB().PG(), mut, "id = ?", id)
 	if err != nil {
 		hlog.Err("hyper.address.useAddr", zap.Error(err))
 		return err
@@ -150,7 +150,7 @@ func useAddr(id string) error {
 }
 
 func listAddrByOwner(owner sattva.Identification) ([]*AddrM, error) {
-	arrM, err := hpg.Find[AddrM](func() *gorm.DB {
+	arrM, err := hdb.Find[AddrM](func() *gorm.DB {
 		return zplt.HelixPgDB().PG().Where("owner = ?", owner)
 	})
 	if err != nil {
@@ -163,7 +163,7 @@ func listAddrByOwner(owner sattva.Identification) ([]*AddrM, error) {
 }
 
 func delAddr(id string) error {
-	err := hpg.Delete[AddrM](zplt.HelixPgDB().PG(), "id = ?", id)
+	err := hdb.Delete[AddrM](zplt.HelixPgDB().PG(), "id = ?", id)
 	if err != nil {
 		hlog.Err("hyper.address.delAddr", zap.Error(err))
 		return err

@@ -2,7 +2,7 @@ package spec
 
 import (
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/category"
 	"go.uber.org/zap"
@@ -10,7 +10,7 @@ import (
 )
 
 func ByCategory(cat category.ID) ([]*Spec, error) {
-	arrM, err := hpg.Find[CatSpecM](func() *gorm.DB {
+	arrM, err := hdb.Find[CatSpecM](func() *gorm.DB {
 		return zplt.HelixPgDB().PG().Where("category = ?", cat)
 	})
 	if err != nil {

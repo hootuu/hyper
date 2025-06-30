@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/hootuu/helix/components/hnid"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
 	"go.uber.org/zap"
@@ -50,13 +50,13 @@ func doCreateSpecItem(tx *gorm.DB, spuID SpuID, item *SpuSpec) error {
 	if len(item.Options) == 0 {
 		return errors.New("require SpuSpec.Options")
 	}
-	err := hpg.Create[SpuSpecM](tx, &SpuSpecM{
+	err := hdb.Create[SpuSpecM](tx, &SpuSpecM{
 		Spu:  spuID,
 		Spec: item.Spec,
 		Seq:  item.Seq,
 	})
 	if err != nil {
-		hlog.Err("hyper.product.doCreateSpecItem: hpg.Create[SpuSpecM]", zap.Error(err))
+		hlog.Err("hyper.product.doCreateSpecItem: hdb.Create[SpuSpecM]", zap.Error(err))
 		return err
 	}
 
@@ -65,7 +65,7 @@ func doCreateSpecItem(tx *gorm.DB, spuID SpuID, item *SpuSpec) error {
 		if optItem.Seq == 0 {
 			optItem.Seq = i + 1
 		}
-		err := hpg.Create[SpuSpecOptM](tx, &SpuSpecOptM{
+		err := hdb.Create[SpuSpecOptM](tx, &SpuSpecOptM{
 			ID:    optItem.OptID,
 			Spu:   spuID,
 			Spec:  item.Spec,
@@ -74,7 +74,7 @@ func doCreateSpecItem(tx *gorm.DB, spuID SpuID, item *SpuSpec) error {
 			Seq:   optItem.Seq,
 		})
 		if err != nil {
-			hlog.Err("hyper.product.doCreateSpecItem: hpg.Create[SpuSpecOptM]", zap.Error(err))
+			hlog.Err("hyper.product.doCreateSpecItem: hdb.Create[SpuSpecOptM]", zap.Error(err))
 			return err
 		}
 	}

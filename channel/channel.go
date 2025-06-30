@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/hootuu/helix/components/htree"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hypes/collar"
 	"gorm.io/gorm"
 )
@@ -34,7 +34,7 @@ func Create(
 		Icon:   icon,
 		Seq:    seq,
 	}
-	err = hpg.Create[ChnM](tx, chnM)
+	err = hdb.Create[ChnM](tx, chnM)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func Add(
 	}
 
 	tx := db(ctx)
-	parentM, err := hpg.Get[ChnM](tx, "id = ?", parent)
+	parentM, err := hdb.Get[ChnM](tx, "id = ?", parent)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func Add(
 		Icon:   icon,
 		Seq:    seq,
 	}
-	err = hpg.Create[ChnM](tx, chnM)
+	err = hdb.Create[ChnM](tx, chnM)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func Get(ctx context.Context, parent ID, deep int) ([]*Channel, error) {
 }
 
 func loadChildren(ctx context.Context, minID htree.ID, maxID htree.ID, base htree.ID) ([]*Channel, error) {
-	arrM, err := hpg.Find[ChnM](func() *gorm.DB {
+	arrM, err := hdb.Find[ChnM](func() *gorm.DB {
 		return db(ctx).Where("id % ? = 0 AND id >= ? AND id <= ?", base, minID, maxID)
 	})
 	if err != nil {
@@ -141,7 +141,7 @@ func loadChildren(ctx context.Context, minID htree.ID, maxID htree.ID, base htre
 }
 
 func db(ctx context.Context) *gorm.DB {
-	tx := hpg.CtxTx(ctx)
+	tx := hdb.CtxTx(ctx)
 	if tx == nil {
 		tx = zplt.HelixPgDB().PG()
 	}

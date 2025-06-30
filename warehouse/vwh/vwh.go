@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
@@ -23,9 +23,9 @@ func CreateVwh(
 	call func(ctx context.Context, vwhM *VirtualWhM) error,
 ) error {
 	tx := db(ctx)
-	bExist, err := hpg.Exist[VirtualWhM](tx, "collar = ?", collar)
+	bExist, err := hdb.Exist[VirtualWhM](tx, "collar = ?", collar)
 	if err != nil {
-		hlog.Err("hyper.vwh.CreateVwh: hpg.Exist[VirtualWhM]", zap.Error(err))
+		hlog.Err("hyper.vwh.CreateVwh: hdb.Exist[VirtualWhM]", zap.Error(err))
 		return err
 	}
 	if bExist {
@@ -36,9 +36,9 @@ func CreateVwh(
 		Collar: collar.String(),
 		Meta:   hjson.MustToBytes(meta),
 	}
-	err = hpg.Create[VirtualWhM](tx, vwhM)
+	err = hdb.Create[VirtualWhM](tx, vwhM)
 	if err != nil {
-		hlog.Err("hyper.vwh.CreateVwh: hpg.Create[VirtualWhM]", zap.Error(err))
+		hlog.Err("hyper.vwh.CreateVwh: hdb.Create[VirtualWhM]", zap.Error(err))
 		return err
 	}
 	err = call(ctx, vwhM)
@@ -81,7 +81,7 @@ func AddPwhSrc(ctx context.Context, paras AddPwhSrcParas) error {
 	if err := pwh.MustExist(ctx, paras.Pwh); err != nil {
 		return err
 	}
-	hasThis, err := hpg.Exist[VirtualWhSrcM](tx,
+	hasThis, err := hdb.Exist[VirtualWhSrcM](tx,
 		"vwh = ? AND pwh = ?", paras.Vwh, paras.Pwh)
 	if err != nil {
 		return err
@@ -97,9 +97,9 @@ func AddPwhSrc(ctx context.Context, paras AddPwhSrcParas) error {
 		Pricing:       paras.Pricing.ToBytes(),
 		Inventory:     paras.Inventory.ToBytes(),
 	}
-	err = hpg.Create[VirtualWhSrcM](tx, m)
+	err = hdb.Create[VirtualWhSrcM](tx, m)
 	if err != nil {
-		hlog.Err("hyper.vwh.AddPwhSrc: hpg.Create[VirtualWhSrcM]", zap.Error(err))
+		hlog.Err("hyper.vwh.AddPwhSrc: hdb.Create[VirtualWhSrcM]", zap.Error(err))
 		return err
 	}
 	return nil
@@ -131,7 +131,7 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 		return err
 	}
 	tx := db(ctx)
-	err := hpg.GetOrCreate(tx, &VirtualWhSrcM{
+	err := hdb.GetOrCreate(tx, &VirtualWhSrcM{
 		Vwh:           paras.Vwh,
 		Pwh:           paras.Pwh,
 		PricingType:   strategy.PricingProfit,
@@ -142,13 +142,13 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 	if err != nil {
 		return err
 	}
-	vwhSkuM, err := hpg.Get[VirtualWhSkuM](tx, "vwh = ? AND sku = ? AND pwh = ?",
+	vwhSkuM, err := hdb.Get[VirtualWhSkuM](tx, "vwh = ? AND sku = ? AND pwh = ?",
 		paras.Vwh, paras.Sku, paras.Pwh)
 	if err != nil {
 		return err
 	}
 	if vwhSkuM == nil {
-		err = hpg.Create[VirtualWhSkuM](tx, &VirtualWhSkuM{
+		err = hdb.Create[VirtualWhSkuM](tx, &VirtualWhSkuM{
 			Vwh:       paras.Vwh,
 			Sku:       paras.Sku,
 			Pwh:       paras.Pwh,
@@ -172,7 +172,7 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 		return nil
 	}
 	mut["version"] = gorm.Expr("version + 1")
-	err = hpg.Update[VirtualWhSkuM](tx, mut, "vwh = ? AND sku = ? AND pwh = ?",
+	err = hdb.Update[VirtualWhSkuM](tx, mut, "vwh = ? AND sku = ? AND pwh = ?",
 		paras.Vwh, paras.Sku, paras.Pwh)
 	if err != nil {
 		return err
@@ -181,7 +181,7 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 }
 
 func db(ctx context.Context) *gorm.DB {
-	tx := hpg.CtxTx(ctx)
+	tx := hdb.CtxTx(ctx)
 	if tx == nil {
 		tx = zplt.HelixPgDB().PG()
 	}

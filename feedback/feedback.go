@@ -3,7 +3,7 @@ package feedback
 import (
 	"errors"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/idx"
 	"github.com/hootuu/hyle/hlog"
 	"go.uber.org/zap"
@@ -17,7 +17,7 @@ func addFeedback(fbM *FbM) (*FbM, error) {
 		return nil, errors.New("require Title")
 	}
 	fbM.ID = idx.New()
-	err := hpg.Create[FbM](zplt.HelixPgDB().PG(), fbM)
+	err := hdb.Create[FbM](zplt.HelixPgDB().PG(), fbM)
 	if err != nil {
 		hlog.Err("hyper.feedback.addFeedback: Create", zap.Error(err))
 		return nil, err

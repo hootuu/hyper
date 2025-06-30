@@ -3,11 +3,11 @@ package pwh
 import (
 	"context"
 	"fmt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 )
 
 func MustExist(ctx context.Context, id ID) error {
-	b, err := hpg.Exist[PhysicalWhM](db(ctx), id)
+	b, err := hdb.Exist[PhysicalWhM](db(ctx), id)
 	if err != nil {
 		return err
 	}

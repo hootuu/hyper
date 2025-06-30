@@ -1,11 +1,11 @@
 package category
 
 import (
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 )
 
 type CtgM struct {
-	hpg.Basic
+	hdb.Basic
 	ID     ID     `gorm:"column:id;primaryKey;"`
 	Parent ID     `gorm:"column:parent;uniqueIndex:uk_parent_name;"`
 	Name   string `gorm:"column:name;uniqueIndex:uk_parent_name;not null;size:32;"`

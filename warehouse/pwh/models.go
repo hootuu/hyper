@@ -1,12 +1,12 @@
 package pwh
 
 import (
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"gorm.io/datatypes"
 )
 
 type PhysicalWhM struct {
-	hpg.Basic
+	hdb.Basic
 	ID     uint64 `gorm:"column:id;primaryKey;"`
 	Collar string `gorm:"column:collar;uniqueIndex;size:64;"`
 	Memo   string `gorm:"column:memo;size:100;"`
@@ -17,12 +17,12 @@ func (m *PhysicalWhM) TableName() string {
 }
 
 type PhysicalSkuM struct {
-	hpg.Basic
+	hdb.Basic
 	PWH       uint64      `gorm:"column:pwh;uniqueIndex:uk_pwh_sku;"`
 	SKU       uint64      `gorm:"column:sku;uniqueIndex:uk_pwh_sku;"`
 	Available uint64      `gorm:"column:available;"`
 	Locked    uint64      `gorm:"column:locked;"`
-	Version   hpg.Version `gorm:"column:version;"`
+	Version   hdb.Version `gorm:"column:version;"`
 }
 
 func (m *PhysicalSkuM) TableName() string {
@@ -30,7 +30,7 @@ func (m *PhysicalSkuM) TableName() string {
 }
 
 type PhysicalInOutM struct {
-	hpg.Basic
+	hdb.Basic
 	PWH       uint64         `gorm:"column:pwh;index;"`
 	SKU       uint64         `gorm:"column:sku;index;"`
 	Direction Direction      `gorm:"column:direction;"`
@@ -44,7 +44,7 @@ func (m *PhysicalInOutM) TableName() string {
 }
 
 type PhysicalLockUnlockM struct {
-	hpg.Basic
+	hdb.Basic
 	PWH       uint64         `gorm:"column:pwh;index;"`
 	SKU       uint64         `gorm:"column:sku;index;"`
 	Direction Direction      `gorm:"column:direction;"`

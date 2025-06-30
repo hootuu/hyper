@@ -3,12 +3,12 @@ package address
 import (
 	"github.com/hootuu/helix/components/htree"
 	"github.com/hootuu/helix/components/sattva"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyper/address/maps"
 )
 
 type RegionM struct {
-	hpg.Basic
+	hdb.Basic
 	ID      htree.ID `gorm:"column:id;primaryKey;"`
 	Map     maps.Map `gorm:"column:map;uniqueIndex:uk_map_code_name;"`
 	Code    string   `gorm:"column:code;uniqueIndex:uk_map_code_name;not null;size:20;"`
@@ -21,7 +21,7 @@ func (m *RegionM) TableName() string {
 }
 
 type AddrM struct {
-	hpg.Basic
+	hdb.Basic
 	ID       string                `gorm:"column:id;primaryKey;"`
 	Owner    sattva.Identification `gorm:"column:owner;index;not null;size:32;"`
 	CName    string                `gorm:"column:cname;not null;size:32;"`

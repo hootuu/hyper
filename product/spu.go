@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/hootuu/helix/components/hnid"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hlog"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -34,7 +34,7 @@ func createSpu(tx *gorm.DB, spuM *SpuM) (*SpuM, error) {
 		return nil, errors.New("require Name")
 	}
 	spuM.ID = gSpuIdGenerator.NextString()
-	err := hpg.Create[SpuM](tx, spuM)
+	err := hdb.Create[SpuM](tx, spuM)
 	if err != nil {
 		hlog.Err("hyper.product.createSpu", zap.Error(err))
 		return nil, err

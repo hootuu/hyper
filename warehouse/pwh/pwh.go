@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
@@ -20,9 +20,9 @@ func CreatePwh(
 	call func(ctx context.Context, pwhM *PhysicalWhM) error,
 ) error {
 	tx := db(ctx)
-	bExist, err := hpg.Exist[PhysicalWhM](tx, "collar = ?", collar)
+	bExist, err := hdb.Exist[PhysicalWhM](tx, "collar = ?", collar)
 	if err != nil {
-		hlog.Err("hyper.pwh.CreatePwh: hpg.Exist[PhysicalWhM]", zap.Error(err))
+		hlog.Err("hyper.pwh.CreatePwh: hdb.Exist[PhysicalWhM]", zap.Error(err))
 		return err
 	}
 	if bExist {
@@ -33,9 +33,9 @@ func CreatePwh(
 		Collar: collar.String(),
 		Memo:   memo,
 	}
-	err = hpg.Create[PhysicalWhM](tx, pwhM)
+	err = hdb.Create[PhysicalWhM](tx, pwhM)
 	if err != nil {
-		hlog.Err("hyper.pwh.CreatePwh: hpg.Create[PhysicalWhM]", zap.Error(err))
+		hlog.Err("hyper.pwh.CreatePwh: hdb.Create[PhysicalWhM]", zap.Error(err))
 		return err
 	}
 	err = call(ctx, pwhM)
@@ -74,14 +74,14 @@ func Into(ctx context.Context, p IntoOutParas) error {
 		return err
 	}
 	tx := db(ctx)
-	bPwhExist, err := hpg.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
+	bPwhExist, err := hdb.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
 	if err != nil {
 		return err
 	}
 	if !bPwhExist {
 		return fmt.Errorf("not exist pwh: %d", p.PwhID)
 	}
-	err = hpg.Tx(tx, func(tx *gorm.DB) error {
+	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		pwhSkuM := &PhysicalSkuM{
 			PWH:       p.PwhID,
 			SKU:       p.SkuID,
@@ -89,7 +89,7 @@ func Into(ctx context.Context, p IntoOutParas) error {
 			Locked:    0,
 			Version:   0,
 		}
-		err = hpg.GetOrCreate[PhysicalSkuM](tx, pwhSkuM, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
+		err = hdb.GetOrCreate[PhysicalSkuM](tx, pwhSkuM, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
 		if err != nil {
 			return err
 		}
@@ -97,12 +97,12 @@ func Into(ctx context.Context, p IntoOutParas) error {
 			"available": gorm.Expr("available + ?", p.Quantity),
 			"version":   gorm.Expr("version + 1"),
 		}
-		err = hpg.Update[PhysicalSkuM](tx, mut,
+		err = hdb.Update[PhysicalSkuM](tx, mut,
 			"pwh = ? AND sku = ? AND version = ?", p.PwhID, p.SkuID, pwhSkuM.Version)
 		if err != nil {
 			return err
 		}
-		err = hpg.Create[PhysicalInOutM](tx, &PhysicalInOutM{
+		err = hdb.Create[PhysicalInOutM](tx, &PhysicalInOutM{
 			PWH:       p.PwhID,
 			SKU:       p.SkuID,
 			Direction: DirectionIn,
@@ -120,31 +120,31 @@ func Out(ctx context.Context, p IntoOutParas) error {
 		return err
 	}
 	tx := db(ctx)
-	bPwhExist, err := hpg.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
+	bPwhExist, err := hdb.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
 	if err != nil {
 		return err
 	}
 	if !bPwhExist {
 		return fmt.Errorf("not exist pwh: %d", p.PwhID)
 	}
-	pwhSkuM, err := hpg.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
+	pwhSkuM, err := hdb.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
 	if err != nil {
 		return err
 	}
 	if pwhSkuM.Available < p.Quantity {
 		return fmt.Errorf("no available quantity")
 	}
-	err = hpg.Tx(tx, func(tx *gorm.DB) error {
+	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		mut := map[string]interface{}{
 			"available": gorm.Expr("available - ?", p.Quantity),
 			"version":   gorm.Expr("version + 1"),
 		}
-		err = hpg.Update[PhysicalSkuM](tx, mut,
+		err = hdb.Update[PhysicalSkuM](tx, mut,
 			"pwh = ? AND sku = ? AND version = ?", p.PwhID, p.SkuID, pwhSkuM.Version)
 		if err != nil {
 			return err
 		}
-		err = hpg.Create[PhysicalInOutM](tx, &PhysicalInOutM{
+		err = hdb.Create[PhysicalInOutM](tx, &PhysicalInOutM{
 			PWH:       p.PwhID,
 			SKU:       p.SkuID,
 			Direction: DirectionOut,
@@ -182,32 +182,32 @@ func Lock(ctx context.Context, p LockUnlockParas) error {
 		return err
 	}
 	tx := db(ctx)
-	bPwhExist, err := hpg.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
+	bPwhExist, err := hdb.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
 	if err != nil {
 		return err
 	}
 	if !bPwhExist {
 		return fmt.Errorf("not exist pwh: %d", p.PwhID)
 	}
-	pwhSkuM, err := hpg.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
+	pwhSkuM, err := hdb.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
 	if err != nil {
 		return err
 	}
 	if pwhSkuM.Available < p.Quantity {
 		return fmt.Errorf("no available quantity")
 	}
-	err = hpg.Tx(tx, func(tx *gorm.DB) error {
+	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		mut := map[string]interface{}{
 			"available": gorm.Expr("available - ?", p.Quantity),
 			"locked":    gorm.Expr("locked + ?", p.Quantity),
 			"version":   gorm.Expr("version + 1"),
 		}
-		err = hpg.Update[PhysicalSkuM](tx, mut,
+		err = hdb.Update[PhysicalSkuM](tx, mut,
 			"pwh = ? AND sku = ? AND version = ?", p.PwhID, p.SkuID, pwhSkuM.Version)
 		if err != nil {
 			return err
 		}
-		err = hpg.Create[PhysicalLockUnlockM](tx, &PhysicalLockUnlockM{
+		err = hdb.Create[PhysicalLockUnlockM](tx, &PhysicalLockUnlockM{
 			PWH:       p.PwhID,
 			SKU:       p.SkuID,
 			Direction: DirectionLock,
@@ -224,32 +224,32 @@ func Unlock(ctx context.Context, p LockUnlockParas) error {
 		return err
 	}
 	tx := db(ctx)
-	bPwhExist, err := hpg.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
+	bPwhExist, err := hdb.Exist[PhysicalWhM](tx, "id = ?", p.PwhID)
 	if err != nil {
 		return err
 	}
 	if !bPwhExist {
 		return fmt.Errorf("not exist pwh: %d", p.PwhID)
 	}
-	pwhSkuM, err := hpg.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
+	pwhSkuM, err := hdb.MustGet[PhysicalSkuM](tx, "pwh = ? AND sku = ?", p.PwhID, p.SkuID)
 	if err != nil {
 		return err
 	}
 	if pwhSkuM.Locked < p.Quantity {
 		return fmt.Errorf("no locked quantity")
 	}
-	err = hpg.Tx(tx, func(tx *gorm.DB) error {
+	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		mut := map[string]interface{}{
 			"available": gorm.Expr("available + ?", p.Quantity),
 			"locked":    gorm.Expr("locked - ?", p.Quantity),
 			"version":   gorm.Expr("version + 1"),
 		}
-		err = hpg.Update[PhysicalSkuM](tx, mut,
+		err = hdb.Update[PhysicalSkuM](tx, mut,
 			"pwh = ? AND sku = ? AND version = ?", p.PwhID, p.SkuID, pwhSkuM.Version)
 		if err != nil {
 			return err
 		}
-		err = hpg.Create[PhysicalLockUnlockM](tx, &PhysicalLockUnlockM{
+		err = hdb.Create[PhysicalLockUnlockM](tx, &PhysicalLockUnlockM{
 			PWH:       p.PwhID,
 			SKU:       p.SkuID,
 			Direction: DirectionUnlock,
@@ -262,7 +262,7 @@ func Unlock(ctx context.Context, p LockUnlockParas) error {
 }
 
 func GetSku(ctx context.Context, pwhID ID, skuID uint64) (*PhysicalSkuM, error) {
-	pwhSkuM, err := hpg.Get[PhysicalSkuM](db(ctx), "pwh = ? AND sku = ?", pwhID, skuID)
+	pwhSkuM, err := hdb.Get[PhysicalSkuM](db(ctx), "pwh = ? AND sku = ?", pwhID, skuID)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func GetSku(ctx context.Context, pwhID ID, skuID uint64) (*PhysicalSkuM, error) 
 }
 
 func db(ctx context.Context) *gorm.DB {
-	tx := hpg.CtxTx(ctx)
+	tx := hdb.CtxTx(ctx)
 	if tx == nil {
 		tx = zplt.HelixPgDB().PG()
 	}

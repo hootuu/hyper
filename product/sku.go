@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/hootuu/helix/components/hnid"
 	"github.com/hootuu/helix/components/zplt"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ func initSkuIdGenerator() error {
 //	//	return nil, errors.New("require Spu")
 //	//}
 //	//skuM.ID = gSkuIdGenerator.NextString()
-//	//err := hpg.Create[SkuM](zplt.HelixPgDB().PG(), skuM)
+//	//err := hdb.Create[SkuM](zplt.HelixPgDB().PG(), skuM)
 //	//if err != nil {
 //	//	hlog.Err("hyper.product.CreateSku", zap.Error(err))
 //	//	return nil, err
@@ -45,7 +45,7 @@ func createSku(tx *gorm.DB, setting *SkuSpecSetting) (SkuID, error) {
 		return "", errors.New("require Spu")
 	}
 	skuID := gSkuIdGenerator.NextString()
-	err := hpg.Create[SkuM](tx, &SkuM{
+	err := hdb.Create[SkuM](tx, &SkuM{
 		ID:  skuID,
 		Spu: setting.Spu,
 	})
@@ -56,7 +56,7 @@ func createSku(tx *gorm.DB, setting *SkuSpecSetting) (SkuID, error) {
 		return "", nil
 	}
 	for _, item := range setting.Specs {
-		err := hpg.Create[SkuSpecM](tx, &SkuSpecM{
+		err := hdb.Create[SkuSpecM](tx, &SkuSpecM{
 			Sku:     skuID,
 			SpecOpt: item,
 		})

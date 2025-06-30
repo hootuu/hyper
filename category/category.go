@@ -7,7 +7,7 @@ import (
 	"github.com/hootuu/helix/components/htree"
 	"github.com/hootuu/helix/components/zplt"
 	"github.com/hootuu/helix/helix"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
 	"go.uber.org/zap"
@@ -40,7 +40,7 @@ func (c *Category) Add(parent htree.ID, name string, icon string) (htree.ID, err
 	if parent == Root {
 		parent = c.tree.Root()
 	}
-	b, err := hpg.Exist[CtgM](c.db().PG().Table(c.tableName()), "parent = ? AND name = ?", parent, name)
+	b, err := hdb.Exist[CtgM](c.db().PG().Table(c.tableName()), "parent = ? AND name = ?", parent, name)
 	if err != nil {
 		return -1, err
 	}
@@ -61,7 +61,7 @@ func (c *Category) Add(parent htree.ID, name string, icon string) (htree.ID, err
 		Name:   name,
 		Icon:   icon,
 	}
-	err = hpg.Create[CtgM](c.db().PG().Table(c.tableName()), ctgM)
+	err = hdb.Create[CtgM](c.db().PG().Table(c.tableName()), ctgM)
 	if err != nil {
 		fmt.Println(hjson.MustToString(ctgM))
 		return -1, err
@@ -73,7 +73,7 @@ func (c *Category) Mut(id htree.ID, name string, icon string) error {
 	if name == "" {
 		return errors.New("require name")
 	}
-	dbM, err := hpg.MustGet[CtgM](c.db().PG().Table(c.tableName()), "id = ?", id)
+	dbM, err := hdb.MustGet[CtgM](c.db().PG().Table(c.tableName()), "id = ?", id)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (c *Category) Mut(id htree.ID, name string, icon string) error {
 	if len(mut) == 0 {
 		return nil
 	}
-	b, err := hpg.Exist[CtgM](c.db().PG().Table(c.tableName()), "parent = ? AND name = ? AND id <> ?", dbM.Parent, name, id)
+	b, err := hdb.Exist[CtgM](c.db().PG().Table(c.tableName()), "parent = ? AND name = ? AND id <> ?", dbM.Parent, name, id)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (c *Category) Mut(id htree.ID, name string, icon string) error {
 		return fmt.Errorf("exists: parent=%d,name=%s", dbM.Parent, name)
 	}
 
-	err = hpg.Update[CtgM](c.db().PG().Table(c.tableName()), mut, "id = ?", id)
+	err = hdb.Update[CtgM](c.db().PG().Table(c.tableName()), mut, "id = ?", id)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func (c *Category) Get(parent htree.ID, deep int) ([]*Categ, error) {
 }
 
 func (c *Category) loadChildren(minID htree.ID, maxID htree.ID, base htree.ID) ([]*Categ, error) {
-	arrM, err := hpg.Find[CtgM](func() *gorm.DB {
+	arrM, err := hdb.Find[CtgM](func() *gorm.DB {
 		return c.db().PG().Table(c.tableName()).
 			Where("id % ? = 0 AND id >= ? AND id <= ?", base, minID, maxID)
 	})
@@ -154,7 +154,7 @@ func (c *Category) loadChildren(minID htree.ID, maxID htree.ID, base htree.ID) (
 
 func (c *Category) Helix() helix.Helix {
 	return helix.BuildHelix(c.Code, func() (context.Context, error) {
-		err := hpg.AutoMigrateWithTable(c.db().PG(), hpg.NewTable(c.tableName(), &CtgM{}))
+		err := hdb.AutoMigrateWithTable(c.db().PG(), hdb.NewTable(c.tableName(), &CtgM{}))
 		if err != nil {
 			hlog.Err("hyper.category.Helix: AutoMigrateWithTable", zap.Error(err))
 			return nil, err
@@ -169,6 +169,6 @@ func (c *Category) tableName() string {
 	return c.Code
 }
 
-func (c *Category) db() *hpg.Database {
+func (c *Category) db() *hdb.Database {
 	return zplt.HelixPgDB()
 }

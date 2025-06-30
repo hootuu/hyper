@@ -1,12 +1,12 @@
 package channel
 
 import (
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hypes/collar"
 )
 
 type ChnM struct {
-	hpg.Basic
+	hdb.Basic
 	Biz    collar.ID `gorm:"column:biz;index;size:64;"`
 	ID     ID        `gorm:"column:id;primaryKey;"`
 	Parent ID        `gorm:"column:parent;uniqueIndex:uk_parent_name;"`

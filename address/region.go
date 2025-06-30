@@ -6,7 +6,7 @@ import (
 	"github.com/hootuu/helix/components/htree"
 	"github.com/hootuu/helix/components/zplt"
 	"github.com/hootuu/helix/helix"
-	"github.com/hootuu/helix/storage/hpg"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hcfg"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hsys"
@@ -25,7 +25,7 @@ func getRegion(id RegionID, deep int) ([]*Region, error) {
 	if err != nil {
 		return nil, err
 	}
-	arrM, err := hpg.Find[RegionM](func() *gorm.DB {
+	arrM, err := hdb.Find[RegionM](func() *gorm.DB {
 		return zplt.HelixPgDB().PG().
 			Where("id % ? = 0 AND id BETWEEN ? AND ?", base, minId, maxId)
 	})
@@ -60,7 +60,7 @@ func regionSave(parentId htree.ID, r *maps.Region) (htree.ID, error) {
 	if parentId == 0 {
 		parentId = gRegionTree.Root()
 	}
-	exist, err := hpg.Exist[RegionM](zplt.HelixPgDB().PG(),
+	exist, err := hdb.Exist[RegionM](zplt.HelixPgDB().PG(),
 		"map = ? AND code = ? AND name = ?",
 		r.Map, r.Code, r.Name,
 	)
@@ -79,7 +79,7 @@ func regionSave(parentId htree.ID, r *maps.Region) (htree.ID, error) {
 	if err != nil {
 		return 0, err
 	}
-	err = hpg.Create[RegionM](zplt.HelixPgDB().PG(), &RegionM{
+	err = hdb.Create[RegionM](zplt.HelixPgDB().PG(), &RegionM{
 		ID:      newId,
 		Map:     r.Map,
 		Code:    r.Code,
