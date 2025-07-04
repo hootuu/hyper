@@ -22,7 +22,7 @@ func (m *RegionM) TableName() string {
 
 type AddrM struct {
 	hdb.Basic
-	ID       string                `gorm:"column:id;primaryKey;"`
+	ID       string                `gorm:"column:id;primaryKey;autoIncrement:false;"`
 	Owner    sattva.Identification `gorm:"column:owner;index;not null;size:32;"`
 	CName    string                `gorm:"column:cname;not null;size:32;"`
 	CMobi    string                `gorm:"column:cmobi;not null;size:32;"`
