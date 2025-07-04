@@ -46,12 +46,14 @@ func addAddr(m *AddrM) (*AddrM, error) {
 		return nil, fmt.Errorf("the maximum number of storage addresses is %d: %d", addrMax, total)
 	}
 
-	regionM, err := hdb.MustGet[RegionM](zplt.HelixPgDB().PG(), "id = ?", m.Region)
-	if err != nil {
-		return nil, err
-	}
+	//regionM, err := hdb.MustGet[RegionM](zplt.HelixPgDB().PG(), "id = ?", m.Region)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//m.FullAddr = regionM.Address + m.Addr
+	m.FullAddr = m.Addr
 	m.ID = idx.New()
-	m.FullAddr = regionM.Address + m.Addr
+
 	err = hdb.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
 		if m.Default {
 			err := hdb.Update[AddrM](tx, map[string]any{
@@ -61,7 +63,7 @@ func addAddr(m *AddrM) (*AddrM, error) {
 				return err
 			}
 		}
-		err := hdb.Create[AddrM](zplt.HelixPgDB().PG(), m)
+		err := hdb.Create[AddrM](tx, m)
 		if err != nil {
 			hlog.Err("hyper.address.addAddr: Create", zap.Error(err))
 			return err
@@ -124,7 +126,7 @@ func mutAddr(mutM *AddrM) error {
 				return err
 			}
 		}
-		err := hdb.Update[AddrM](zplt.HelixPgDB().PG(), mut, "id = ?", mutM.ID)
+		err := hdb.Update[AddrM](tx, mut, "id = ?", mutM.ID)
 		if err != nil {
 			hlog.Err("hyper.address.addAddr: Update", zap.Error(err))
 			return err
@@ -139,7 +141,7 @@ func mutAddr(mutM *AddrM) error {
 
 func useAddr(id string) error {
 	mut := map[string]any{
-		"usage": gorm.Expr("usage+1"),
+		"usage": gorm.Expr("`usage` + ?", 1),
 	}
 	err := hdb.Update[AddrM](zplt.HelixPgDB().PG(), mut, "id = ?", id)
 	if err != nil {
