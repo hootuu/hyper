@@ -9,7 +9,7 @@ import (
 
 type RegionM struct {
 	hdb.Basic
-	ID      htree.ID `gorm:"column:id;primaryKey;"`
+	ID      htree.ID `gorm:"column:id;primaryKey;autoIncrement:false;"`
 	Map     maps.Map `gorm:"column:map;uniqueIndex:uk_map_code_name;"`
 	Code    string   `gorm:"column:code;uniqueIndex:uk_map_code_name;not null;size:20;"`
 	Name    string   `gorm:"column:name;uniqueIndex:uk_map_code_name;not null;size:32;"`
