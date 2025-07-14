@@ -27,7 +27,7 @@ func Create(
 		return err
 	}
 	chnM := &ChnM{
-		Biz:    biz.ID(),
+		Biz:    biz.ToSafeID(),
 		ID:     id,
 		Parent: gChannelIdTree.Root(),
 		Name:   name,

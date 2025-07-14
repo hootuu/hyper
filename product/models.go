@@ -39,7 +39,7 @@ func (m *SpuSpecM) TableName() string {
 
 type SpuSpecOptM struct {
 	hdb.Basic
-	ID    spec.OptID     `gorm:"column:id;primaryKey;"`
+	ID    spec.OptID     `gorm:"column:id;primaryKey;autoIncrement:false;"`
 	Spu   SpuID          `gorm:"column:spu;uniqueIndex:uk_spu_spec;size:32;"`
 	Spec  spec.ID        `gorm:"column:spec;uniqueIndex:uk_spu_spec;"`
 	Label string         `gorm:"column:name;size:100;"`
