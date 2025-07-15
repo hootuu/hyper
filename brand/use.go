@@ -13,7 +13,7 @@ func Add(
 	intro string,
 	desc string,
 	media media.Dict,
-) (string, error) {
+) (ID, error) {
 	brM, err := addBrand(&BrM{
 		Name:        name,
 		Intro:       intro,
@@ -21,17 +21,20 @@ func Add(
 		Media:       hjson.MustToBytes(media),
 	})
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	return brM.ID, nil
 }
 
 func init() {
 	helix.Use(helix.BuildHelix("hyper_brand", func() (context.Context, error) {
-		err := zplt.HelixPgDB().PG().AutoMigrate(
+		if err := zplt.HelixPgDB().PG().AutoMigrate(
 			&BrM{},
-		)
-		if err != nil {
+		); err != nil {
+			return nil, err
+		}
+
+		if err := doInitIdGenerator(); err != nil {
 			return nil, err
 		}
 

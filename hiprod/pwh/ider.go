@@ -6,7 +6,7 @@ var gPwhIdGenerator hnid.Generator
 
 func initPwhIdGenerator() error {
 	var err error
-	gPwhIdGenerator, err = hnid.NewGenerator("hyper_pwh_id",
+	gPwhIdGenerator, err = hnid.NewGenerator("hyper_prod_pwh_id",
 		hnid.NewOptions(1, 6).
 			SetTimestamp(hnid.Minute, false).
 			SetAutoInc(6, 1, 999999, 1000),
@@ -15,4 +15,8 @@ func initPwhIdGenerator() error {
 		return err
 	}
 	return nil
+}
+
+func nextID() ID {
+	return gPwhIdGenerator.NextUint64()
 }

@@ -1,4 +1,4 @@
-package vwh
+package pwh
 
 import (
 	"context"
@@ -7,16 +7,21 @@ import (
 )
 
 func init() {
-	helix.Use(helix.BuildHelix("hyper_warehouse_vwh", func() (context.Context, error) {
+	helix.Use(helix.BuildHelix("hyper_prod_pwh", func() (context.Context, error) {
 		err := zplt.HelixPgDB().PG().AutoMigrate(
-			&VirtualWhM{},
-			&VirtualWhSrcM{},
-			&VirtualWhSkuM{},
+			&PhysicalWhM{},
+			&PhysicalSkuM{},
+			&PhysicalInOutM{},
+			&PhysicalLockUnlockM{},
 		)
 		if err != nil {
 			return nil, err
 		}
-		err = initVwhIdGenerator()
+		err = initPwhIdGenerator()
+		if err != nil {
+			return nil, err
+		}
+		err = initUni()
 		if err != nil {
 			return nil, err
 		}

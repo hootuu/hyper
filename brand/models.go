@@ -5,11 +5,11 @@ import (
 	"gorm.io/datatypes"
 )
 
-type ID = string
+type ID = uint64
 
 type BrM struct {
 	hdb.Basic
-	ID          ID             `gorm:"column:id;primaryKey;size:32;"`
+	ID          ID             `gorm:"column:id;primaryKey;autoIncrement:false;"`
 	Name        string         `gorm:"column:name;index;size:100;"`
 	Intro       string         `gorm:"column:intro;size:1000;"`
 	Description string         `gorm:"column:description;type:text;"`

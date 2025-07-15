@@ -8,8 +8,9 @@ import (
 	"github.com/hootuu/helix/storage/hmeili"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
+	"github.com/hootuu/hyper/hiprod/vwh"
+	"github.com/hootuu/hyper/hyperidx/prodidx"
 	"github.com/hootuu/hyper/hyperplt"
-	"github.com/hootuu/hyper/product"
 	"go.uber.org/zap"
 	"gorm.io/gorm/schema"
 )
@@ -29,11 +30,11 @@ func init() {
 func doInit() error {
 	meiliPtr := hyperplt.Meili()
 	mArr := []schema.Tabler{
-		&product.SpuM{},
+		&vwh.VirtualWhSkuM{},
 		&hiorder.OrderM{},
 	}
 	idxArr := []hmeili.Indexer{
-		&TxSpuIndexer{},
+		&prodidx.TxVwhProdIndexer{},
 		&TxOrdIndexer{},
 	}
 	for i, m := range mArr {

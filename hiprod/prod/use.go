@@ -1,4 +1,4 @@
-package product
+package prod
 
 import (
 	"context"
@@ -6,9 +6,8 @@ import (
 	"github.com/hootuu/helix/helix"
 )
 
-// todo will del all pkg
 func init() {
-	helix.Use(helix.BuildHelix("hyper_product_bak", func() (context.Context, error) {
+	helix.Use(helix.BuildHelix("hyper_prod", func() (context.Context, error) {
 		err := zplt.HelixPgDB().PG().AutoMigrate(
 			&SpuM{},
 			&SpuSpecM{},

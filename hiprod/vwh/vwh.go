@@ -3,49 +3,43 @@ package vwh
 import (
 	"context"
 	"fmt"
-	"github.com/hootuu/helix/components/zplt"
 	"github.com/hootuu/helix/storage/hdb"
-	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
-	"github.com/hootuu/hyper/sku"
-	"github.com/hootuu/hyper/warehouse/pwh"
-	"github.com/hootuu/hyper/warehouse/vwh/strategy"
+	"github.com/hootuu/hyper/hiprod/prod"
+	"github.com/hootuu/hyper/hiprod/pwh"
+	"github.com/hootuu/hyper/hiprod/vwh/strategy"
+	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 func CreateVwh(
 	ctx context.Context,
-	collar collar.Collar,
-	meta dict.Dict,
-	call func(ctx context.Context, vwhM *VirtualWhM) error,
-) error {
-	tx := db(ctx)
-	bExist, err := hdb.Exist[VirtualWhM](tx, "collar = ?", collar)
+	link collar.ID,
+	memo string,
+) (ID, error) {
+	tx := hyperplt.Tx(ctx)
+	bExist, err := hdb.Exist[VirtualWhM](tx, "collar = ?", link)
 	if err != nil {
 		hlog.Err("hyper.vwh.CreateVwh: hdb.Exist[VirtualWhM]", zap.Error(err))
-		return err
+		return 0, err
 	}
 	if bExist {
-		return fmt.Errorf("exist pwh: %s", collar)
+		return 0, fmt.Errorf("exist pwh: %s", link)
 	}
 	vwhM := &VirtualWhM{
-		ID:     gVwhIdGenerator.NextUint64(),
-		Collar: collar.String(),
-		Meta:   hjson.MustToBytes(meta),
+		ID:   gVwhIdGenerator.NextUint64(),
+		Link: link,
+		Memo: memo,
 	}
 	err = hdb.Create[VirtualWhM](tx, vwhM)
 	if err != nil {
 		hlog.Err("hyper.vwh.CreateVwh: hdb.Create[VirtualWhM]", zap.Error(err))
-		return err
+		return 0, err
 	}
-	err = call(ctx, vwhM)
-	if err != nil {
-		return err
-	}
-	return nil
+	return vwhM.ID, nil
 }
 
 type AddPwhSrcParas struct {
@@ -76,7 +70,7 @@ func AddPwhSrc(ctx context.Context, paras AddPwhSrcParas) error {
 		return err
 	}
 
-	tx := db(ctx)
+	tx := hyperplt.Tx(ctx)
 
 	if err := pwh.MustExist(ctx, paras.Pwh); err != nil {
 		return err
@@ -106,11 +100,11 @@ func AddPwhSrc(ctx context.Context, paras AddPwhSrcParas) error {
 }
 
 type SetSkuParas struct {
-	Vwh       ID     `json:"vwh"`
-	Sku       sku.ID `json:"sku"`
-	Pwh       pwh.ID `json:"pwh"`
-	Price     uint64 `json:"price"`
-	Inventory uint64 `json:"inventory"`
+	Vwh       ID         `json:"vwh"`
+	Sku       prod.SkuID `json:"sku"`
+	Pwh       pwh.ID     `json:"pwh"`
+	Price     uint64     `json:"price"`
+	Inventory uint64     `json:"inventory"`
 }
 
 func (p SetSkuParas) Validate() error {
@@ -130,7 +124,7 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 	if err := paras.Validate(); err != nil {
 		return err
 	}
-	tx := db(ctx)
+	tx := hyperplt.Tx(ctx)
 	err := hdb.GetOrCreate(tx, &VirtualWhSrcM{
 		Vwh:           paras.Vwh,
 		Pwh:           paras.Pwh,
@@ -178,12 +172,4 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 		return err
 	}
 	return nil
-}
-
-func db(ctx context.Context) *gorm.DB {
-	tx := hdb.CtxTx(ctx)
-	if tx == nil {
-		tx = zplt.HelixPgDB().PG()
-	}
-	return tx
 }

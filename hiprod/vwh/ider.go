@@ -16,3 +16,7 @@ func initVwhIdGenerator() error {
 	}
 	return nil
 }
+
+func nextID() ID {
+	return gVwhIdGenerator.NextUint64()
+}
