@@ -17,14 +17,18 @@ func RegionChildren(id RegionID, deep ...int) ([]*Region, error) {
 
 func AddAddress(addr *Address) (*Address, error) {
 	addrM, err := addAddr(&AddrM{
-		Owner:   addr.Owner,
-		CName:   addr.Contact.Name,
-		CMobi:   addr.Contact.Mobi,
-		Default: addr.Default,
-		Region:  addr.Region,
-		Addr:    addr.Address,
-		LocX:    addr.Location.Lon,
-		LocY:    addr.Location.Lat,
+		Owner:    addr.Owner,
+		CName:    addr.Contact.Name,
+		CMobi:    addr.Contact.Mobi,
+		Default:  addr.Default,
+		Region:   addr.Region,
+		Addr:     addr.Address,
+		LocX:     addr.Location.Lon,
+		LocY:     addr.Location.Lat,
+		Province: addr.Province,
+		City:     addr.City,
+		District: addr.District,
+		Tag:      addr.Tag,
 	})
 	if err != nil {
 		return nil, err
@@ -34,15 +38,19 @@ func AddAddress(addr *Address) (*Address, error) {
 
 func MutAddress(addr *Address) error {
 	return mutAddr(&AddrM{
-		ID:      addr.ID,
-		Owner:   addr.Owner,
-		CName:   addr.Contact.Name,
-		CMobi:   addr.Contact.Mobi,
-		Default: addr.Default,
-		Region:  addr.Region,
-		Addr:    addr.Address,
-		LocX:    addr.Location.Lon,
-		LocY:    addr.Location.Lat,
+		ID:       addr.ID,
+		Owner:    addr.Owner,
+		CName:    addr.Contact.Name,
+		CMobi:    addr.Contact.Mobi,
+		Default:  addr.Default,
+		Region:   addr.Region,
+		Addr:     addr.Address,
+		LocX:     addr.Location.Lon,
+		LocY:     addr.Location.Lat,
+		Province: addr.Province,
+		City:     addr.City,
+		District: addr.District,
+		Tag:      addr.Tag,
 	})
 }
 

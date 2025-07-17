@@ -29,6 +29,16 @@ func verifyAddr(m *AddrM) error {
 	if m.CMobi == "" {
 		return errors.New("require contact mobi")
 	}
+	if m.City == "" {
+		return errors.New("require city")
+	}
+	if m.Province == "" {
+		return errors.New("require province")
+	}
+	if m.District == "" {
+		return errors.New("require district")
+	}
+
 	return nil
 }
 
@@ -51,7 +61,7 @@ func addAddr(m *AddrM) (*AddrM, error) {
 	//	return nil, err
 	//}
 	//m.FullAddr = regionM.Address + m.Addr
-	m.FullAddr = m.Addr
+	m.FullAddr = fmt.Sprintf("%s%s%s%s", m.Province, m.City, m.District, m.Addr)
 	m.ID = idx.New()
 
 	err = hdb.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
@@ -116,6 +126,18 @@ func mutAddr(mutM *AddrM) error {
 	}
 	if dbM.Default != mutM.Default {
 		mut["is_default"] = mutM.Default
+	}
+	if dbM.Province != mutM.Province {
+		mut["province"] = mutM.Province
+	}
+	if dbM.City != mutM.City {
+		mut["city"] = mutM.City
+	}
+	if dbM.District != mutM.District {
+		mut["district"] = mutM.District
+	}
+	if dbM.Tag != mutM.Tag {
+		mut["tag"] = mutM.Tag
 	}
 	err = hdb.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
 		if mutM.Default {
