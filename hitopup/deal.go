@@ -57,17 +57,17 @@ func (d *Deal) After(ctx context.Context, _ hiorder.Status, target hiorder.Statu
 		}
 		fmt.Println("mint=====>>>>>>>>>>", hjson.MustToString(mint))
 		fmt.Println("mint=====>>>>>>>>>>", mint.Address)
-		payee, err := nine.AccountGetByLink(ctx, d.topup.payee.ToSafeID())
+		recp, err := nine.AccountGetByLink(ctx, d.ord.PayerAccount.ToSafeID())
 		if err != nil {
 			hlog.Err("hitopup.deal.PayeeGet", zap.Error(err))
 			return err
 		}
-		if payee == nil {
+		if recp == nil {
 			return fmt.Errorf("hitopup.deal.Alter: no such Payee[%s]", d.topup.payee)
 		}
 		sig, err := nine.TokenMint(ctx, nineapi.TxMintParas{
 			Mint:       mint.Address,
-			Recipient:  payee.Address,
+			Recipient:  recp.Address,
 			Amount:     d.ord.Amount,
 			LockAmount: 0,
 			Meta:       d.ord.Meta,
