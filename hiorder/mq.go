@@ -1,6 +1,7 @@
 package hiorder
 
 import (
+	"context"
 	"fmt"
 	"github.com/hootuu/helix/helix"
 	"github.com/hootuu/helix/unicom/hmq/hmq"
@@ -19,8 +20,18 @@ func doRegFactoryMqHandle(code Code, handle func(ordID ID, payload *PaymentPaylo
 	gFactoryMap[code] = handle
 }
 
-func onPaymentAltered(msg *hmq.Message) error {
-	fmt.Println("onPaymentAltered.......") //todo
+func onPaymentAltered(ctx context.Context, msg *hmq.Message) (err error) {
+	if hlog.IsElapseFunction() {
+		defer hlog.ElapseWithCtx(ctx, "onPaymentAltered",
+			hlog.F(zap.String("msg.id", msg.ID)),
+			func() []zap.Field {
+				if err != nil {
+					return []zap.Field{zap.Error(err)}
+				}
+				return nil
+			},
+		)()
+	}
 	if msg == nil {
 		hlog.Fix("hiorder.onPaymentAlter: msg is nil")
 		return nil
@@ -44,8 +55,7 @@ func onPaymentAltered(msg *hmq.Message) error {
 	ordCode, ordIdStr := orderCollar.Parse()
 	handle, ok := gFactoryMap[ordCode]
 	if !ok {
-		hlog.Logger().Error("hiorder.onPaymentAlter: order code not registered", zap.String("code", ordCode))
-		//return fmt.Errorf("hiorder.onPaymentAlter: order code not registered: %s", ordCode)
+		hlog.Fix("hiorder.onPaymentAlter: order code not registered", zap.String("code", ordCode))
 		return nil
 	}
 	ordID := cast.ToUint64(ordIdStr)
