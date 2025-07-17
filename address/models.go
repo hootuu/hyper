@@ -32,7 +32,11 @@ type AddrM struct {
 	FullAddr string                `gorm:"column:full_addr;not null;size:200;"`
 	LocX     float64               `gorm:"column:loc_x;type:decimal(9,6);"`
 	LocY     float64               `gorm:"column:loc_y;type:decimal(9,6);"`
-	Usage    int64                 `gorm:"column:usage;"`
+	Usage    int64                 `gorm:"column:usage;size:20"`
+	Province string                `gorm:"column:province;size:32;not null;"`
+	City     string                `gorm:"column:city;size:64;not null;"`
+	District string                `gorm:"column:district;size:64;not null;"`
+	Tag      string                `gorm:"column:tag;size:20"`
 }
 
 func (m *AddrM) TableName() string {
@@ -55,5 +59,9 @@ func (m *AddrM) ToAddress() *Address {
 			Lon: m.LocX,
 			Lat: m.LocY,
 		},
+		Province: m.Province,
+		City:     m.City,
+		District: m.District,
+		Tag:      m.Tag,
 	}
 }

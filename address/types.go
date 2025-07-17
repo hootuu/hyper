@@ -32,4 +32,8 @@ type Address struct {
 	Contact  Contact               `json:"contact"`
 	Default  bool                  `json:"default"`
 	Location Location              `json:"location"`
+	Province string                `json:"province"`
+	City     string                `json:"city"`
+	District string                `json:"district"`
+	Tag      string                `json:"tag"`
 }
