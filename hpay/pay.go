@@ -1,0 +1,20 @@
+package hpay
+
+import (
+	"context"
+	"github.com/hootuu/hyper/hpay/payment"
+)
+
+type CreateParas = payment.CreateParas
+
+func Create(ctx context.Context, paras CreateParas) (payment.ID, error) {
+	return payment.Create(ctx, &paras)
+}
+
+func Prepare(ctx context.Context, id payment.ID) error {
+	return payment.Prepare(ctx, id)
+}
+
+func Advance(ctx context.Context, id payment.ID) error {
+	return payment.Advance(ctx, id)
+}

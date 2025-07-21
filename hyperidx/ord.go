@@ -4,7 +4,6 @@ import (
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/helix/storage/hmeili"
 	"github.com/hootuu/hyle/hlog"
-	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hyperplt"
 	"github.com/meilisearch/meilisearch-go"
@@ -68,22 +67,10 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc := hmeili.NewMapDocument(m.ID, m.AutoID, m.UpdatedAt.UnixMilli())
 	doc["code"] = m.Code
 	doc["title"] = m.Title
-	collar.MustParse(m.Payer, func(code string, id string) {
-		doc["payer_code"] = code
-		doc["payer_id"] = id
-	})
-	collar.MustParse(m.PayerAccount, func(code string, id string) {
-		doc["payer_acc_code"] = code
-		doc["payer_acc_id"] = id
-	})
-	collar.MustParse(m.Payee, func(code string, id string) {
-		doc["payee_code"] = code
-		doc["payee_id"] = id
-	})
-	collar.MustParse(m.PayeeAccount, func(code string, id string) {
-		doc["payee_acc_code"] = code
-		doc["payee_acc_id"] = id
-	})
+	doc["payer"] = m.Payer.MustToDict()
+	doc["payee"] = m.Payee.MustToDict()
+	doc["payer_acc"] = m.PayerAccount.MustToDict()
+	doc["payee_acc"] = m.PayeeAccount.MustToDict()
 	doc["currency"] = m.Currency
 	doc["amount"] = m.Amount
 	doc["status"] = m.Status

@@ -7,9 +7,9 @@ var gSpuIdGenerator hnid.Generator
 func initSpuIdGenerator() error {
 	var err error
 	gSpuIdGenerator, err = hnid.NewGenerator("hyper_prod_spu_ider",
-		hnid.NewOptions(1, 6).
+		hnid.NewOptions(1, 8).
 			SetTimestamp(hnid.Minute, false).
-			SetAutoInc(6, 1, 999999, 1000),
+			SetAutoInc(5, 1, 99999, 500),
 	)
 	if err != nil {
 		return err
@@ -27,8 +27,8 @@ func initSkuIdGenerator() error {
 	var err error
 	gSkuIdGenerator, err = hnid.NewGenerator("hyper_prod_sku_ider",
 		hnid.NewOptions(1, 8).
-			SetTimestamp(hnid.Second, false).
-			SetAutoInc(6, 1, 999999, 1000),
+			SetTimestamp(hnid.Minute, false).
+			SetAutoInc(6, 1, 999999, 500),
 	)
 	if err != nil {
 		return err

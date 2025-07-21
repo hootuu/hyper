@@ -16,10 +16,10 @@ type Order[T Matter] struct {
 	ID           ID             `json:"id"`
 	Code         Code           `json:"code"`
 	Title        string         `json:"title"`
-	Payer        collar.Collar  `json:"payer"`
-	PayerAccount collar.Collar  `json:"payer_account"`
-	Payee        collar.Collar  `json:"payee"`
-	PayeeAccount collar.Collar  `json:"payee_account"`
+	Payer        collar.Link    `json:"payer"`
+	PayerAccount collar.Link    `json:"payer_account"`
+	Payee        collar.Link    `json:"payee"`
+	PayeeAccount collar.Link    `json:"payee_account"`
 	Matter       T              `json:"matter"`
 	Currency     hcoin.Currency `json:"currency"`
 	Amount       hcoin.Amount   `json:"amount"`
@@ -39,10 +39,10 @@ func (ord *Order[T]) toModel() *OrderM {
 		ID:           ord.ID,
 		Code:         ord.Code,
 		Title:        ord.Title,
-		Payer:        ord.Payer.ToID(),
-		PayerAccount: ord.PayerAccount.ToID(),
-		Payee:        ord.Payee.ToID(),
-		PayeeAccount: ord.PayeeAccount.ToID(),
+		Payer:        ord.Payer,
+		PayerAccount: ord.PayerAccount,
+		Payee:        ord.Payee,
+		PayeeAccount: ord.PayeeAccount,
 		Currency:     ord.Currency,
 		Amount:       ord.Amount,
 		Status:       ord.Status,

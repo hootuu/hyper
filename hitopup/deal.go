@@ -3,7 +3,6 @@ package hitopup
 import (
 	"context"
 	"fmt"
-	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
@@ -47,32 +46,22 @@ func (d *Deal) After(ctx context.Context, _ hiorder.Status, target hiorder.Statu
 	switch target {
 	case hiorder.Completed:
 		nine := harmonic.Nineora()
-		mint, err := nine.TokenGetByLink(ctx, d.topup.mint.ToSafeID())
-		if err != nil {
-			hlog.Err("hitopup.deal.MintGet", zap.Error(err))
-			return err
-		}
-		if mint == nil {
-			return fmt.Errorf("hitopup.deal.Alter: no such Mint[%s]", d.topup.mint)
-		}
-		fmt.Println("mint=====>>>>>>>>>>", hjson.MustToString(mint))
-		fmt.Println("mint=====>>>>>>>>>>", mint.Address)
-		recp, err := nine.AccountGetByLink(ctx, d.ord.PayerAccount.ToSafeID())
+		recp, err := nine.AccountGetByLink(ctx, d.ord.PayerAccount)
 		if err != nil {
 			hlog.Err("hitopup.deal.PayeeGet", zap.Error(err))
 			return err
 		}
 		if recp == nil {
-			return fmt.Errorf("hitopup.deal.Alter: no such Payee[%s]", d.topup.payee)
+			return fmt.Errorf("hitopup.deal.Alter: no such Payer[%s]", d.ord.PayerAccount.Display())
 		}
-		sig, err := nine.TokenMint(ctx, nineapi.TxMintParas{
-			Mint:       mint.Address,
+		sig, err := nine.TokenMint(ctx, &nineapi.TxMintParas{
+			Mint:       d.topup.mint,
 			Recipient:  recp.Address,
 			Amount:     d.ord.Amount,
 			LockAmount: 0,
-			Meta:       d.ord.Meta,
-			Biz:        d.ord.Code,
-			Link:       d.ord.BuildCollar().ToID(),
+			//Meta:       d.ord.Meta, TODO
+			Biz:  d.ord.Code,
+			Link: d.ord.BuildCollar().Link(),
 		})
 		if err != nil {
 			hlog.Err("hitopup.deal.Alter", zap.Error(err))

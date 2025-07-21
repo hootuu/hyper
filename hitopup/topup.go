@@ -11,6 +11,7 @@ import (
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hiorder"
+	"github.com/nineora/harmonic/chain"
 	"strings"
 	"time"
 )
@@ -19,18 +20,16 @@ type Convert func(src uint64) uint64
 
 type TopUp struct {
 	code       hiorder.Code
-	mint       collar.Collar
-	payee      collar.Collar
+	mint       chain.Address
 	factory    *hiorder.Factory[Matter]
 	convert    Convert
 	mqConsumer *hmq.Consumer
 }
 
-func NewTopUp(code hiorder.Code, mint collar.Collar, payee collar.Collar, convert Convert) (*TopUp, error) {
+func NewTopUp(code hiorder.Code, mint chain.Address, convert Convert) (*TopUp, error) {
 	t := &TopUp{
-		code:  code,
-		mint:  mint,
-		payee: payee,
+		code: code,
+		mint: mint,
 	}
 	if convert != nil {
 		t.convert = convert
@@ -47,13 +46,13 @@ func NewTopUp(code hiorder.Code, mint collar.Collar, payee collar.Collar, conver
 }
 
 type TopUpParas struct {
-	Title        string        `json:"title"`
-	Payer        collar.Collar `json:"payer"`
-	PayerAccount collar.Collar `json:"payer_account"`
-	Amount       hcoin.Amount  `json:"amount"`
-	Ctrl         ctrl.Ctrl     `json:"ctrl"`
-	Tag          tag.Tag       `json:"tag"`
-	Meta         dict.Dict     `json:"meta"`
+	Title        string       `json:"title"`
+	Payer        collar.Link  `json:"payer"`
+	PayerAccount collar.Link  `json:"payer_account"`
+	Amount       hcoin.Amount `json:"amount"`
+	Ctrl         ctrl.Ctrl    `json:"ctrl"`
+	Tag          tag.Tag      `json:"tag"`
+	Meta         dict.Dict    `json:"meta"`
 }
 
 func (p TopUpParas) validate() error {
@@ -68,8 +67,8 @@ func (t *TopUp) TopUp(ctx context.Context, paras TopUpParas) (*hiorder.Order[Mat
 		Title:        paras.Title,
 		Payer:        paras.Payer,
 		PayerAccount: paras.PayerAccount,
-		Payee:        t.payee,
-		PayeeAccount: t.payee,
+		Payee:        collar.Build("NINEORA", t.mint).Link(),
+		PayeeAccount: collar.Build("NINEORA", t.mint).Link(), //todo
 		Amount:       paras.Amount,
 		Matter:       Matter{},
 		Ctrl:         paras.Ctrl,

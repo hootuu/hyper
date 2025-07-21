@@ -29,16 +29,16 @@ func NewFactory[T Matter](dealer Dealer[T]) *Factory[T] {
 }
 
 type CreateParas[T Matter] struct {
-	Title        string        `json:"title"`
-	Payer        collar.Collar `json:"payer"`
-	PayerAccount collar.Collar `json:"payer_account"`
-	Payee        collar.Collar `json:"payee"`
-	PayeeAccount collar.Collar `json:"payee_account"`
-	Amount       hcoin.Amount  `json:"amount"`
-	Matter       T             `json:"matter"`
-	Ctrl         ctrl.Ctrl     `json:"ctrl"`
-	Tag          tag.Tag       `json:"tag"`
-	Meta         dict.Dict     `json:"meta"`
+	Title        string       `json:"title"`
+	Payer        collar.Link  `json:"payer"`
+	PayerAccount collar.Link  `json:"payer_account"`
+	Payee        collar.Link  `json:"payee"`
+	PayeeAccount collar.Link  `json:"payee_account"`
+	Amount       hcoin.Amount `json:"amount"`
+	Matter       T            `json:"matter"`
+	Ctrl         ctrl.Ctrl    `json:"ctrl"`
+	Tag          tag.Tag      `json:"tag"`
+	Meta         dict.Dict    `json:"meta"`
 }
 
 func (p *CreateParas[T]) Validate() error {
