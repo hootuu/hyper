@@ -14,12 +14,12 @@ import (
 )
 
 type Single struct {
-	payee   collar.Collar
+	payee   collar.Link
 	code    hiorder.Code
 	factory *hiorder.Factory[Matter]
 }
 
-func Build(code hiorder.Code, payee collar.Collar) (*Single, error) {
+func Build(code hiorder.Code, payee collar.Link) (*Single, error) {
 	s := &Single{
 		code:  code,
 		payee: payee,
@@ -32,14 +32,14 @@ func Build(code hiorder.Code, payee collar.Collar) (*Single, error) {
 }
 
 type CreateParas struct {
-	SkuID        prod.SkuID    `json:"sku_id"`
-	Payer        collar.Collar `json:"payer"`
-	PayerAccount collar.Collar `json:"payer_account"`
-	Quantity     uint32        `json:"quantity"`
-	Amount       hcoin.Amount  `json:"amount"`
-	Ctrl         ctrl.Ctrl     `json:"ctrl"`
-	Tag          tag.Tag       `json:"tag"`
-	Meta         dict.Dict     `json:"meta"`
+	SkuID        prod.SkuID   `json:"sku_id"`
+	Payer        collar.Link  `json:"payer"`
+	PayerAccount collar.Link  `json:"payer_account"`
+	Quantity     uint32       `json:"quantity"`
+	Amount       hcoin.Amount `json:"amount"`
+	Ctrl         ctrl.Ctrl    `json:"ctrl"`
+	Tag          tag.Tag      `json:"tag"`
+	Meta         dict.Dict    `json:"meta"`
 }
 
 func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order[Matter], error) {
