@@ -120,3 +120,23 @@ func CreateProduct(ctx context.Context, paras *ProdCreateParas) (skuID prod.SkuI
 	}
 	return skuID, nil
 }
+
+type Product struct {
+	SkuID prod.SkuID `json:"sku_id"`
+	Title string     `json:"title"`
+	Price uint64     `json:"price"`
+}
+
+type ProductGetParas struct {
+	SkuID prod.SkuID `json:"sku_id"`
+	Title string     `json:"title"`
+	Price uint64     `json:"price"`
+}
+
+func ProductGet(ctx context.Context, paras ProductGetParas) (*Product, error) {
+	return &Product{
+		SkuID: paras.SkuID,
+		Title: paras.Title,
+		Price: paras.Price,
+	}, nil
+}

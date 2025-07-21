@@ -1,15 +1,13 @@
 package singleord
 
 import (
-	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyper/hiorder"
 	"time"
 )
 
 type Dealer struct {
-	code     hiorder.Code
-	currency hcoin.Currency
-	timeout  time.Duration
+	code    hiorder.Code
+	timeout time.Duration
 
 	f      *hiorder.Factory[Matter]
 	single *Single
@@ -17,22 +15,16 @@ type Dealer struct {
 
 func newDealer(
 	code hiorder.Code,
-	currency hcoin.Currency,
 	timeout time.Duration,
 ) *Dealer {
 	return &Dealer{
-		code:     code,
-		currency: currency,
-		timeout:  timeout,
+		code:    code,
+		timeout: timeout,
 	}
 }
 
 func (d *Dealer) Code() hiorder.Code {
 	return d.code
-}
-
-func (d *Dealer) Currency() hcoin.Currency {
-	return d.currency
 }
 
 func (d *Dealer) Build(ord hiorder.Order[Matter]) (hiorder.Deal[Matter], error) {

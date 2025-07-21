@@ -29,7 +29,7 @@ func main() {
 			panic(err)
 		}
 
-		xcAddr, err := qing.XB().Address(ctx)
+		xcAddr, err := qing.XC().Address(ctx)
 		if err != nil {
 			panic(err)
 		}
@@ -38,6 +38,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("usrAccAddr: ", usrAccAddr)
 
 		//创建充值订单工厂： 应该使用全局变量
 		gTopup, err := hitopup.NewTopUp(

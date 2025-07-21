@@ -2,7 +2,6 @@ package hitopup
 
 import (
 	"context"
-	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/nineora/harmonic/harmonic"
@@ -27,10 +26,6 @@ func newDeal(ord *hiorder.Order[Matter], dealer *Dealer, topup *TopUp) *Deal {
 
 func (d *Deal) Code() hiorder.Code {
 	return d.dealer.Code()
-}
-
-func (d *Deal) Currency() hcoin.Currency {
-	return d.dealer.currency
 }
 
 func (d *Deal) Timeout() time.Duration {

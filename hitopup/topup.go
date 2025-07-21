@@ -94,7 +94,7 @@ func (t *TopUp) TopUpCreate(ctx context.Context, paras TopUpParas) (*hiorder.Ord
 			Ex:        nil,
 			CheckCode: t.code,
 		}},
-		Matter: Matter{},
+		Matter: Matter{InAccount: paras.InAccountAddr},
 		Ctrl:   paras.Ctrl,
 		Tag:    paras.Tag,
 		Meta:   paras.Meta,
@@ -160,9 +160,8 @@ func (t *TopUp) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID) (er
 }
 
 func (t *TopUp) doInit() error {
-	currencyStr := hcfg.GetString(t.cfg("currency"), string(hcoin.CNY))
 	timeout := hcfg.GetDuration(t.cfg("timeout"), 15*time.Minute)
-	d := newDealer(t.code, hcoin.Currency(currencyStr), timeout)
+	d := newDealer(t.code, timeout)
 	t.factory = hiorder.NewFactory[Matter](d)
 	d.doInit(t.factory, t)
 	return nil

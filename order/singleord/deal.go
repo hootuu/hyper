@@ -2,7 +2,6 @@ package singleord
 
 import (
 	"context"
-	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyper/hiorder"
 	"time"
 )
@@ -21,10 +20,6 @@ func newDeal(dealer *Dealer, ord *hiorder.Order[Matter]) *Deal {
 
 func (d *Deal) Code() hiorder.Code {
 	return d.dealer.code
-}
-
-func (d *Deal) Currency() hcoin.Currency {
-	return d.dealer.currency
 }
 
 func (d *Deal) Timeout() time.Duration {
