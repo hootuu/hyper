@@ -138,14 +138,21 @@ func Prepare(ctx context.Context, payID ID) (err error) {
 			},
 		)()
 	}
-	var jobArrM []*JobM
+
 	tx := hyperplt.Tx(ctx)
 	payM, err := hdb.MustGet[PayM](tx, "id = ?", payID)
 	if err != nil {
 		return errors.New("payment not exists: " + err.Error())
 	}
 	pay := payM.To()
+	switch pay.Status {
+	case Initialized:
+	default:
+		return errors.New("payment not initialized")
+	}
+
 	lstPayAutoID := int64(0)
+	var jobArrM []*JobM
 	err = hdb.Iter[JobM](func() *gorm.DB {
 		return tx.Where("payment_id = ? AND auto_id > ?", payID, lstPayAutoID)
 	}, func(m *JobM) error {
@@ -160,15 +167,45 @@ func Prepare(ctx context.Context, payID ID) (err error) {
 		return errors.New("load job failed, no job found")
 	}
 	err = hdb.Tx(tx, func(tx *gorm.DB) error {
+		rows, err := hdb.UpdateX[PayM](tx, map[string]any{
+			"status": Preparing,
+		},
+			"id = ? AND status = ?",
+			pay.ID, pay.Status,
+		)
+		if err != nil {
+			return err
+		}
+		if rows == 0 {
+			return errors.New("the payment status has been changed")
+		}
+		preparedCount := 0
 		innerCtx := hdb.TxCtx(tx, ctx)
 		for _, job := range jobArrM {
 			executor, err := MustGetJobExecutor(job.Channel)
 			if err != nil {
 				return err
 			}
-			err = executor.Prepare(innerCtx, pay, job.To())
+			done, err := executor.Prepare(innerCtx, pay, job.To())
 			if err != nil {
 				return err
+			}
+			if done {
+				preparedCount++
+			}
+		}
+		if preparedCount == payM.JobCount {
+			rows, err := hdb.UpdateX[PayM](tx, map[string]any{
+				"status": Prepared,
+			},
+				"id = ? AND status = ?",
+				pay.ID, Preparing,
+			)
+			if err != nil {
+				return err
+			}
+			if rows == 0 {
+				return errors.New("the payment status has been changed")
 			}
 		}
 		return nil
@@ -192,13 +229,19 @@ func Advance(ctx context.Context, payID ID) (err error) {
 			},
 		)()
 	}
-	var jobArrM []*JobM
+
 	tx := hyperplt.Tx(ctx)
 	payM, err := hdb.MustGet[PayM](tx, "id = ?", payID)
 	if err != nil {
 		return errors.New("payment not exists: " + err.Error())
 	}
 	pay := payM.To()
+	switch pay.Status {
+	case Prepared:
+	default:
+		return errors.New("payment not prepared")
+	}
+	var jobArrM []*JobM
 	lstPayAutoID := int64(0)
 	err = hdb.Iter[JobM](func() *gorm.DB {
 		return tx.Where("payment_id = ? AND auto_id > ?", payID, lstPayAutoID)
@@ -214,15 +257,45 @@ func Advance(ctx context.Context, payID ID) (err error) {
 		return errors.New("load job failed, no job found")
 	}
 	err = hdb.Tx(tx, func(tx *gorm.DB) error {
+		rows, err := hdb.UpdateX[PayM](tx, map[string]any{
+			"status": Executing,
+		},
+			"id = ? AND status = ?",
+			pay.ID, pay.Status,
+		)
+		if err != nil {
+			return err
+		}
+		if rows == 0 {
+			return errors.New("the payment status has been changed")
+		}
+		completedCount := 0
 		innerCtx := hdb.TxCtx(tx, ctx)
 		for _, job := range jobArrM {
 			executor, err := MustGetJobExecutor(job.Channel)
 			if err != nil {
 				return err
 			}
-			err = executor.Advance(innerCtx, pay, job.To())
+			done, err := executor.Advance(innerCtx, pay, job.To())
 			if err != nil {
 				return err
+			}
+			if done {
+				completedCount++
+			}
+		}
+		if completedCount == payM.JobCount {
+			rows, err := hdb.UpdateX[PayM](tx, map[string]any{
+				"status": Completed,
+			},
+				"id = ? AND status = ?",
+				pay.ID, Executing,
+			)
+			if err != nil {
+				return err
+			}
+			if rows == 0 {
+				return errors.New("the payment status has been changed")
 			}
 		}
 		return nil

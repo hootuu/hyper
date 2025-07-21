@@ -8,12 +8,13 @@ import (
 
 type ID = uint64
 type Payment struct {
-	ID     ID          `json:"id"`
-	Payer  collar.Link `json:"payer"`
-	Payee  collar.Link `json:"payee"`
-	Biz    collar.Link `json:"biz"`
-	Amount uint64      `json:"amount"`
-	Status Status      `json:"status"`
+	ID       ID          `json:"id"`
+	Payer    collar.Link `json:"payer"`
+	Payee    collar.Link `json:"payee"`
+	Biz      collar.Link `json:"biz"`
+	Amount   uint64      `json:"amount"`
+	Status   Status      `json:"status"`
+	JobCount int         `json:"job_count"`
 }
 
 type Channel = string
@@ -36,8 +37,8 @@ type JobDefine interface {
 
 type JobExecutor interface {
 	GetChannel() Channel
-	Prepare(ctx context.Context, pay *Payment, job *Job) error
-	Advance(ctx context.Context, pay *Payment, job *Job) error
+	Prepare(ctx context.Context, pay *Payment, job *Job) (synced bool, err error)
+	Advance(ctx context.Context, pay *Payment, job *Job) (synced bool, err error)
 	Cancel(ctx context.Context, job *Job) error
 	OnPrepared(ctx context.Context, job *Job) error
 	OnCompleted(ctx context.Context, job *Job) error

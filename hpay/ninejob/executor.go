@@ -29,15 +29,15 @@ func (e *Executor) GetChannel() payment.Channel {
 	return NineChannel
 }
 
-func (e *Executor) Prepare(ctx context.Context, pay *payment.Payment, job *payment.Job) (err error) {
+func (e *Executor) Prepare(ctx context.Context, pay *payment.Payment, job *payment.Job) (synced bool, err error) {
 	if pay == nil {
-		return fmt.Errorf("assert: pay is not nil")
+		return false, fmt.Errorf("assert: pay is not nil")
 	}
 	if job == nil {
-		return fmt.Errorf("assert: job is not nil")
+		return false, fmt.Errorf("assert: job is not nil")
 	}
 	if pay.ID != job.PaymentID {
-		return fmt.Errorf("assert: payment from job %d is not %d", job.PaymentID, pay.ID)
+		return false, fmt.Errorf("assert: payment from job %d is not %d", job.PaymentID, pay.ID)
 	}
 	if hlog.IsElapseComponent() {
 		defer hlog.ElapseWithCtx(ctx, "hyper.payment.nine.Prepare",
@@ -53,7 +53,7 @@ func (e *Executor) Prepare(ctx context.Context, pay *payment.Payment, job *payme
 
 	localJob, err := JobFromCtx(job.Ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	bizCode, _, _ := pay.Biz.ToCodeID()
@@ -65,23 +65,21 @@ func (e *Executor) Prepare(ctx context.Context, pay *payment.Payment, job *payme
 		Ex:      localJob.Ex,
 	})
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	fmt.Println("Prepare job: ", hjson.MustToString(job)) //todo
-
-	return nil
+	return true, nil
 }
 
-func (e *Executor) Advance(ctx context.Context, pay *payment.Payment, job *payment.Job) (err error) {
+func (e *Executor) Advance(ctx context.Context, pay *payment.Payment, job *payment.Job) (synced bool, err error) {
 	if pay == nil {
-		return fmt.Errorf("assert: pay is not nil")
+		return false, fmt.Errorf("assert: pay is not nil")
 	}
 	if job == nil {
-		return fmt.Errorf("assert: job is not nil")
+		return false, fmt.Errorf("assert: job is not nil")
 	}
 	if pay.ID != job.PaymentID {
-		return fmt.Errorf("assert: payment from job %d is not %d", job.PaymentID, pay.ID)
+		return false, fmt.Errorf("assert: payment from job %d is not %d", job.PaymentID, pay.ID)
 	}
 	var unlockSign nineora.Signature = ""
 	var transSign nineora.Signature = ""
@@ -102,7 +100,7 @@ func (e *Executor) Advance(ctx context.Context, pay *payment.Payment, job *payme
 
 	localJob, err := JobFromCtx(job.Ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	bizCode, _, _ := pay.Biz.ToCodeID()
@@ -137,10 +135,10 @@ func (e *Executor) Advance(ctx context.Context, pay *payment.Payment, job *payme
 	})
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
 func (e *Executor) Cancel(ctx context.Context, job *payment.Job) error {

@@ -7,7 +7,9 @@ type Status hfsm.State
 const (
 	_ Status = iota
 	Initialized
+	Preparing
 	Prepared
+	Executing
 	Completed
 	Timeout
 	Canceled

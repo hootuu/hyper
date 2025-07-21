@@ -48,32 +48,6 @@ func doTopupExample() {
 	}
 
 	uid := "USER_" + cast.ToString(time.Now().UnixMilli())
-	//以下在CASH充值可以不用
-	//usrMobi := "8618088889999"
-	//usrWalletAddr, err := lightv.UserWalletHelper.Init(
-	//	nineora.SeedOfCell(usrMobi).ToCollar().ToSafeID(),
-	//	uid,
-	//	nil,
-	//)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println("测试用户钱包地址:::: ", usrWalletAddr)
-	//
-	//usrAccAddr, err := lightv.UserAccHelper.GetOrInit(
-	//	uid,
-	//	func() chain.Address {
-	//		return usrWalletAddr
-	//	},
-	//	func() *nineapi.Ex {
-	//		return nil
-	//	},
-	//)
-	//if err != nil {
-	//	fmt.Println("UserAccHelper.GetOrInit:::: ", err)
-	//	panic(err)
-	//}
-	//fmt.Println("测试用户账户地址:::: ", usrAccAddr)
 
 	ord, err := gTopup.TopUp(context.Background(), hitopup.TopUpParas{
 		Title:        "这是一笔充值" + cast.ToString(time.Now().UnixMilli()),
