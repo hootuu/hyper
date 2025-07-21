@@ -23,7 +23,7 @@ type Job struct {
 	JobID      JobID     `json:"job_id"`
 	Channel    Channel   `json:"channel"`
 	PaymentID  ID        `json:"payment_id"`
-	PaymentSeq uint32    `json:"payment_seq"`
+	PaymentSeq int       `json:"payment_seq"`
 	Status     JobStatus `json:"status"`
 	Ctx        dict.Dict `json:"ctx"`
 }
@@ -33,6 +33,7 @@ type JobDefine interface {
 	GetChannel() Channel
 	GetAmount() uint64
 	GetCtx() dict.Dict
+	GetCheckCode() string
 }
 
 type JobExecutor interface {

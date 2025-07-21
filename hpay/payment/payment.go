@@ -76,13 +76,16 @@ func Create(ctx context.Context, paras *CreateParas) (id ID, err error) {
 	}
 
 	payM := &PayM{
-		Template: hdb.TemplateFromEx(paras.Ex),
-		ID:       NxtPaymentID(),
-		BizLink:  paras.BizLink,
-		Payer:    paras.Payer,
-		Payee:    paras.Payee,
-		Amount:   paras.Amount,
-		Status:   Initialized,
+		Template:          hdb.TemplateFromEx(paras.Ex),
+		ID:                NxtPaymentID(),
+		BizLink:           paras.BizLink,
+		Payer:             paras.Payer,
+		Payee:             paras.Payee,
+		Amount:            paras.Amount,
+		Status:            Initialized,
+		JobCount:          len(paras.Jobs),
+		PreparedJobCount:  0,
+		CompletedJobCount: 0,
 	}
 	totalAmountByJob := uint64(0)
 	var jobArrM []*JobM
@@ -94,7 +97,7 @@ func Create(ctx context.Context, paras *CreateParas) (id ID, err error) {
 		if totalAmountByJob > paras.Amount {
 			return 0, errors.New("hpay.Create: totalAmountByJobs exceeds amount")
 		}
-		seq := uint32(i + 1)
+		seq := i + 1
 		jobM := &JobM{
 			ID:         BuildJobID(payM.ID, seq),
 			Channel:    job.GetChannel(),
@@ -102,6 +105,7 @@ func Create(ctx context.Context, paras *CreateParas) (id ID, err error) {
 			PaymentSeq: seq,
 			Status:     JobInitialized,
 			Ctx:        hjson.MustToBytes(job.GetCtx()),
+			CheckCode:  job.GetCheckCode(),
 		}
 		jobArrM = append(jobArrM, jobM)
 	}
@@ -194,10 +198,14 @@ func Prepare(ctx context.Context, payID ID) (err error) {
 				preparedCount++
 			}
 		}
-		if preparedCount == payM.JobCount {
-			rows, err := hdb.UpdateX[PayM](tx, map[string]any{
-				"status": Prepared,
-			},
+
+		if preparedCount > 0 {
+			payMut := make(map[string]any)
+			payMut["prepared_job_count"] = gorm.Expr("prepared_job_count + ?", preparedCount)
+			if preparedCount == payM.JobCount {
+				payMut["status"] = Prepared
+			}
+			rows, err := hdb.UpdateX[PayM](tx, payMut,
 				"id = ? AND status = ?",
 				pay.ID, Preparing,
 			)
@@ -208,6 +216,7 @@ func Prepare(ctx context.Context, payID ID) (err error) {
 				return errors.New("the payment status has been changed")
 			}
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -256,6 +265,7 @@ func Advance(ctx context.Context, payID ID) (err error) {
 	if len(jobArrM) == 0 {
 		return errors.New("load job failed, no job found")
 	}
+	payCompleted := false
 	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		rows, err := hdb.UpdateX[PayM](tx, map[string]any{
 			"status": Executing,
@@ -284,10 +294,15 @@ func Advance(ctx context.Context, payID ID) (err error) {
 				completedCount++
 			}
 		}
-		if completedCount == payM.JobCount {
-			rows, err := hdb.UpdateX[PayM](tx, map[string]any{
-				"status": Completed,
-			},
+		if completedCount > 0 {
+			payMut := make(map[string]any)
+			payMut["completed_job_count"] = gorm.Expr("completed_job_count + ?", completedCount)
+
+			if completedCount == payM.JobCount {
+				payMut["status"] = Completed
+				payCompleted = true
+			}
+			rows, err := hdb.UpdateX[PayM](tx, payMut,
 				"id = ? AND status = ?",
 				pay.ID, Executing,
 			)
@@ -303,6 +318,149 @@ func Advance(ctx context.Context, payID ID) (err error) {
 	if err != nil {
 		return errors.New("job executor" + err.Error())
 	}
+	if payCompleted {
+		go func() {
+			mqPublishPaymentAlter(payM.ID, payM.BizLink, payM.Status, Completed)
+		}()
+	}
 
+	return nil
+}
+
+func OnJobPrepared(ctx context.Context, job *Job) (err error) {
+	fmt.Println("OnJobPrepared", job)
+	return nil
+}
+
+func OnJobCompleted(ctx context.Context, job *Job) (err error) {
+	fmt.Println("OnJobCompleted", job)
+	return nil
+}
+
+func OnJobCanceled(ctx context.Context, job *Job) (err error) {
+	fmt.Println("OnJobCancel", job)
+	return nil
+}
+
+func OnJobTimeout(ctx context.Context, job *Job) (err error) {
+	fmt.Println("OnJobTimeout", job)
+	return nil
+}
+
+func DoJobPrepared(ctx context.Context, pid ID, seq int, checkCode string) (err error) {
+	jobID := BuildJobID(pid, seq)
+	tx := hyperplt.Tx(ctx)
+	payM, err := hdb.MustGet[PayM](tx, "id = ?", pid)
+	if err != nil {
+		return errors.New("load payment failed: " + err.Error())
+	}
+	switch payM.Status {
+	case Preparing:
+	default:
+		return errors.New("the payment status is not preparing")
+	}
+	jobM, err := hdb.MustGet[JobM](tx, "id = ?", jobID)
+	if err != nil {
+		return errors.New("load job failed: " + err.Error())
+	}
+	if jobM.CheckCode != checkCode {
+		return fmt.Errorf("invalid job check code: %s vs %s", jobM.CheckCode, checkCode)
+	}
+	payPrepared := false
+	err = hdb.Tx(tx, func(tx *gorm.DB) error {
+		jobMut := map[string]any{
+			"status": JobPrepared,
+		}
+		row, err := hdb.UpdateX[JobM](tx, jobMut,
+			"id = ? AND status = ?", jobM.ID, jobM.Status)
+		if err != nil {
+			return err
+		}
+		if row == 0 {
+			return errors.New("the job status has been changed")
+		}
+		payMut := map[string]any{
+			"prepared_job_count": gorm.Expr("prepared_job_count + 1"),
+		}
+		if payM.PreparedJobCount+1 == payM.JobCount {
+			payMut["status"] = Prepared
+			payPrepared = true
+		}
+		row, err = hdb.UpdateX[PayM](tx, payMut,
+			"id = ? AND status = ?", payM.ID, payM.Status)
+		if err != nil {
+			return err
+		}
+		if row == 0 {
+			return errors.New("the job status has been changed")
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if payPrepared {
+		//do advance auto todo
+	}
+	return nil
+}
+
+func DoJobCompleted(ctx context.Context, pid ID, seq int, checkCode string) (err error) {
+	jobID := BuildJobID(pid, seq)
+	tx := hyperplt.Tx(ctx)
+	payM, err := hdb.MustGet[PayM](tx, "id = ?", pid)
+	if err != nil {
+		return err
+	}
+	switch payM.Status {
+	case Executing:
+	default:
+		return errors.New("the payment status is not executing")
+	}
+	jobM, err := hdb.MustGet[JobM](tx, "id = ?", jobID)
+	if err != nil {
+		return err
+	}
+	if jobM.CheckCode != checkCode {
+		return fmt.Errorf("invalid job check code: %s vs %s", jobM.CheckCode, checkCode)
+	}
+	payCompleted := false
+	err = hdb.Tx(tx, func(tx *gorm.DB) error {
+		jobMut := map[string]any{
+			"status": JobCompleted,
+		}
+		row, err := hdb.UpdateX[JobM](tx, jobMut,
+			"id = ? AND status = ?", jobM.ID, jobM.Status)
+		if err != nil {
+			return err
+		}
+		if row == 0 {
+			return errors.New("the job status has been changed")
+		}
+		payMut := map[string]any{
+			"completed_job_count": gorm.Expr("completed_job_count + 1"),
+		}
+		if payM.CompletedJobCount+1 == payM.JobCount {
+			payMut["status"] = Completed
+			payCompleted = true
+		}
+		row, err = hdb.UpdateX[PayM](tx, payMut,
+			"id = ? AND status = ?", payM.ID, payM.Status)
+		if err != nil {
+			return err
+		}
+		if row == 0 {
+			return errors.New("the job status has been changed")
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if payCompleted {
+		go func() {
+			mqPublishPaymentAlter(payM.ID, payM.BizLink, payM.Status, Completed)
+		}()
+	}
 	return nil
 }

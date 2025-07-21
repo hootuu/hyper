@@ -10,13 +10,15 @@ import (
 
 type PayM struct {
 	hdb.Template
-	ID       ID          `gorm:"column:id;primaryKey;autoIncrement:false;"`
-	BizLink  collar.Link `gorm:"column:biz_link;uniqueIndex;size:128;"`
-	Payer    collar.Link `gorm:"column:payer;index;size:128;"`
-	Payee    collar.Link `gorm:"column:payee;index;size:128;"`
-	Amount   uint64      `gorm:"column:amount;autoIncrement:false;"`
-	Status   Status      `gorm:"column:status;"`
-	JobCount int         `gorm:"column:job_count;"`
+	ID                ID          `gorm:"column:id;primaryKey;autoIncrement:false;"`
+	BizLink           collar.Link `gorm:"column:biz_link;uniqueIndex;size:128;"`
+	Payer             collar.Link `gorm:"column:payer;index;size:128;"`
+	Payee             collar.Link `gorm:"column:payee;index;size:128;"`
+	Amount            uint64      `gorm:"column:amount;autoIncrement:false;"`
+	Status            Status      `gorm:"column:status;"`
+	JobCount          int         `gorm:"column:job_count;"`
+	PreparedJobCount  int         `gorm:"column:prepared_job_count;"`
+	CompletedJobCount int         `gorm:"column:completed_job_count;"`
 }
 
 func (m *PayM) TableName() string {
@@ -40,9 +42,10 @@ type JobM struct {
 	ID         JobID          `gorm:"column:id;primaryKey;autoIncrement:false;"`
 	Channel    Channel        `gorm:"column:channel;index;size:32;"`
 	PaymentID  ID             `gorm:"column:payment_id;uniqueIndex:uk_pay_seq;autoIncrement:false;"`
-	PaymentSeq uint32         `gorm:"column:payment_seq;uniqueIndex:uk_pay_seq;"`
+	PaymentSeq int            `gorm:"column:payment_seq;uniqueIndex:uk_pay_seq;"`
 	Status     JobStatus      `gorm:"column:status;index;"`
 	Ctx        datatypes.JSON `gorm:"column:ctx;type:jsonb;"`
+	CheckCode  string         `gorm:"column:check_code;size:32;"`
 }
 
 func (m *JobM) TableName() string {

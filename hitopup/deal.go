@@ -2,7 +2,6 @@ package hitopup
 
 import (
 	"context"
-	"fmt"
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
@@ -46,17 +45,9 @@ func (d *Deal) After(ctx context.Context, _ hiorder.Status, target hiorder.Statu
 	switch target {
 	case hiorder.Completed:
 		nine := harmonic.Nineora()
-		recp, err := nine.AccountGetByLink(ctx, d.ord.PayerAccount)
-		if err != nil {
-			hlog.Err("hitopup.deal.PayeeGet", zap.Error(err))
-			return err
-		}
-		if recp == nil {
-			return fmt.Errorf("hitopup.deal.Alter: no such Payer[%s]", d.ord.PayerAccount.Display())
-		}
 		sig, err := nine.TokenMint(ctx, &nineapi.TxMintParas{
 			Mint:       d.topup.mint,
-			Recipient:  recp.Address,
+			Recipient:  d.ord.Matter.InAccount,
 			Amount:     d.ord.Amount,
 			LockAmount: 0,
 			//Meta:       d.ord.Meta, TODO

@@ -63,19 +63,19 @@ func doTopupExample() {
 	}
 	fmt.Println("<UNK>", ord)
 
-	//模拟Ninepay发送支付成功信息
-	go func() {
-		time.Sleep(1 * time.Second)
-		err = zplt.HelixMqPublish(
-			hiorder.PaymentAlterTopic,
-			hjson.MustToBytes(hiorder.PaymentPayload{
-				OrderCollar: ord.BuildCollar().ToID(),
-				PaymentID:   "16880929",
-				SrcStatus:   hiorder.PaymentInitial,
-				DstStatus:   hiorder.PaymentPaid,
-			}),
-		)
-	}()
+	////模拟Ninepay发送支付成功信息
+	//go func() {
+	//	time.Sleep(1 * time.Second)
+	//	err = zplt.HelixMqPublish(
+	//		hiorder.PaymentAlterTopic,
+	//		hjson.MustToBytes(hiorder.PaymentPayload{
+	//			OrderCollar: ord.BuildCollar().ToID(),
+	//			PaymentID:   "16880929",
+	//			SrcStatus:   hiorder.PaymentInitial,
+	//			DstStatus:   hiorder.PaymentPaid,
+	//		}),
+	//	)
+	//}()
 
 	time.Sleep(10 * time.Second)
 	pageData, err := hyperidx.Filter(

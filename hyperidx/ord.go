@@ -69,12 +69,10 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["title"] = m.Title
 	doc["payer"] = m.Payer.MustToDict()
 	doc["payee"] = m.Payee.MustToDict()
-	doc["payer_acc"] = m.PayerAccount.MustToDict()
-	doc["payee_acc"] = m.PayeeAccount.MustToDict()
-	doc["currency"] = m.Currency
 	doc["amount"] = m.Amount
 	doc["status"] = m.Status
 	doc["matter"] = m.Matter
+	//todo
 
 	return doc, nil
 }

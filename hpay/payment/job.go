@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func BuildJobID(paymentID ID, seq uint32) JobID {
+func BuildJobID(paymentID ID, seq int) JobID {
 	return hmd5.MD5(fmt.Sprintf("%d_%d", paymentID, seq))
 }
 

@@ -55,22 +55,20 @@ func (d *Dealer) OnPaymentAltered(alter *hiorder.PaymentAltered[Matter]) error {
 		hlog.Fix("hitopup.dealer.OnPaymentAltered: alter is nil")
 		return nil
 	}
-	switch alter.DstStatus {
-	case hiorder.PaymentPaid:
-		ctx := context.Background()
-		eng, err := d.f.Load(ctx, alter.Order.ID)
-		if err != nil {
-			hlog.Err("hitopup.dealer.OnPaymentAltered: load fail", zap.Error(err))
-			return err
-		}
-		fmt.Println("hitopup.dealer.OnPaymentAltered: load success") // todo
-		err = eng.Complete(ctx)
-		if err != nil {
-			hlog.Err("hitopup.dealer.OnPaymentAltered: complete fail", zap.Error(err))
-			return err
-		}
-		return nil
-	default:
+	if !alter.IsCompleted() {
 		return nil
 	}
+	ctx := context.Background()
+	eng, err := d.f.Load(ctx, alter.Order.ID)
+	if err != nil {
+		hlog.Err("hitopup.dealer.OnPaymentAltered: load fail", zap.Error(err))
+		return err
+	}
+	fmt.Println("hitopup.dealer.OnPaymentAltered: load success") // todo
+	err = eng.Complete(ctx)
+	if err != nil {
+		hlog.Err("hitopup.dealer.OnPaymentAltered: complete fail", zap.Error(err))
+		return err
+	}
+	return nil
 }

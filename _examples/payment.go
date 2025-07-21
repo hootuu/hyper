@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hootuu/helix/helix"
+	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/data/idx"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
@@ -11,6 +12,7 @@ import (
 	"github.com/hootuu/hyper/hpay"
 	"github.com/hootuu/hyper/hpay/ninejob"
 	"github.com/hootuu/hyper/hpay/payment"
+	"github.com/hootuu/hyper/hpay/thirdjob"
 	"github.com/nineora/harmonic/harmonic"
 	"github.com/nineora/lightv/_examples/tools"
 	"github.com/nineora/lightv/qing"
@@ -19,6 +21,14 @@ import (
 
 func main() {
 	helix.AfterStartup(func() {
+		payment.MqRegisterPaymentAlter("PAY_BIZ", func(ctx context.Context, payload *payment.PaymentPayload) error {
+			fmt.Println("ON PAYMENT ALTER", hjson.MustToString(payload))
+			if payload.IsCompleted() {
+				fmt.Println("[COMPLETED]")
+			}
+			return nil
+		})
+
 		ctx := context.WithValue(context.Background(), hlog.TraceIdKey, idx.New())
 		uid := fmt.Sprintf("uid_%d", time.Now().UnixMilli())
 		exM := ex.EmptyEx()
@@ -67,15 +77,21 @@ func main() {
 		payId, err := hpay.Create(ctx, hpay.CreateParas{
 			Payer:   collar.Build("USER", uid).Link(),
 			Payee:   collar.Build("USER", uid).Link(),
-			BizLink: collar.Build("BUY", uid).Link(),
+			BizLink: collar.Build("PAY_BIZ", uid).Link(),
 			Amount:  900,
 			Ex:      exM,
 			Jobs: []payment.JobDefine{
-				ninejob.Job{
+				&ninejob.Job{
 					Mint:   xcAddr,
 					Payer:  usrXcAddr,
 					Payee:  usrXcAddr2,
-					Amount: 900,
+					Amount: 800,
+				},
+				&thirdjob.Job{
+					ThirdCode: "WECHAT",
+					Amount:    100,
+					Ex:        ex.EmptyEx(),
+					CheckCode: "TeXT",
 				},
 			},
 		})
@@ -83,13 +99,23 @@ func main() {
 			panic(err)
 		}
 		fmt.Println("PaymentID: ", payId)
-		jobID := payment.BuildJobID(payId, 0)
-		fmt.Println("JobID: ", jobID)
+
 		err = hpay.Prepare(ctx, payId)
 		if err != nil {
 			panic(err)
 		}
+
+		err = hpay.JobPrepared(ctx, payId, 2, "TeXT")
+		if err != nil {
+			panic(err)
+		}
+
 		err = hpay.Advance(ctx, payId)
+		if err != nil {
+			panic(err)
+		}
+
+		err = hpay.JobCompleted(ctx, payId, 2, "TeXT")
 		if err != nil {
 			panic(err)
 		}
