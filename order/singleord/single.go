@@ -44,12 +44,10 @@ type CreateParas struct {
 
 func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order[Matter], error) {
 	engine, err := s.factory.New(ctx, &hiorder.CreateParas[Matter]{
-		Title:        "[PROD]" + cast.ToString(paras.SkuID),
-		Payer:        paras.Payer,
-		PayerAccount: paras.PayerAccount,
-		Payee:        s.payee,
-		PayeeAccount: s.payee,
-		Amount:       paras.Amount,
+		Title:  "[PROD]" + cast.ToString(paras.SkuID),
+		Payer:  paras.Payer,
+		Payee:  s.payee,
+		Amount: paras.Amount,
 		Matter: Matter{
 			SkuID:    paras.SkuID,
 			VwhID:    0,
