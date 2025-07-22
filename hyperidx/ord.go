@@ -31,7 +31,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"id",
 		"code",
 		"payer_code",
-		"payer_id",
+		"payer",
 		"payer_acc_code",
 		"payer_acc_id",
 		"payee_code",
@@ -39,6 +39,8 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"payee_acc_code",
 		"payee_acc_id",
 		"status",
+		"timestamp",
+		"title",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
