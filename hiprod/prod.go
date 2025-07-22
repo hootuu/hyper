@@ -16,6 +16,7 @@ import (
 	"github.com/hootuu/hyper/hiprod/pwh"
 	"github.com/hootuu/hyper/hiprod/vwh"
 	"github.com/hootuu/hyper/hyperplt"
+	"github.com/hootuu/hyper/product"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -138,5 +139,31 @@ func ProductGet(ctx context.Context, paras ProductGetParas) (*Product, error) {
 		SkuID: paras.SkuID,
 		Title: paras.Title,
 		Price: paras.Price,
+	}, nil
+}
+
+func GetProduct(skuID prod.SkuID) (map[string]any, error) {
+	prodSku, err := hdb.MustGet[product.SkuM](hyperplt.DB(), "id = ?", skuID)
+	if err != nil {
+		return nil, err
+	}
+	spu, err := hdb.MustGet[product.SpuM](hyperplt.DB(), "id = ?", prodSku.Spu)
+	if err != nil {
+		return nil, err
+	}
+	vwhSku, err := hdb.MustGet[vwh.VirtualWhSkuM](hyperplt.DB(), "sku = ?", skuID)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]any{
+		"sku_id":    prodSku.ID,
+		"spu_id":    prodSku.Spu,
+		"name":      spu.Name,
+		"media":     spu.MainMedia,
+		"category":  spu.Category,
+		"brand":     spu.Brand,
+		"price":     vwhSku.Price,
+		"inventory": vwhSku.Inventory,
 	}, nil
 }
