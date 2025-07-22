@@ -42,6 +42,7 @@ type CreateParas[T Matter] struct {
 	Ctrl    ctrl.Ctrl           `json:"ctrl"`
 	Tag     tag.Tag             `json:"tag"`
 	Meta    dict.Dict           `json:"meta"`
+	UniLink collar.Link         `json:"uniLink"`
 }
 
 func (p *CreateParas[T]) Validate() error {

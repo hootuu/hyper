@@ -26,6 +26,7 @@ type Order[T Matter] struct {
 	Ctrl      ctrl.Ctrl    `json:"ctrl"`
 	Tag       tag.Tag      `json:"tag"`
 	Meta      dict.Dict    `json:"meta"`
+	UniLink   collar.Link  `json:"uni_link"`
 }
 
 func (ord *Order[T]) toModel() *OrderM {
@@ -44,6 +45,7 @@ func (ord *Order[T]) toModel() *OrderM {
 		PaymentID: ord.PaymentID,
 		Status:    ord.Status,
 		Matter:    hjson.MustToBytes(ord.Matter),
+		UniLink:   ord.UniLink,
 	}
 	return m
 }

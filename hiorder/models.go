@@ -23,6 +23,7 @@ type OrderM struct {
 	PaymentID payment.ID     `gorm:"column:payment_id;uniqueIndex;autoIncrement:false;"`
 	Status    hfsm.State     `gorm:"column:status;not null;"`
 	Matter    datatypes.JSON `gorm:"column:matter;type:jsonb;"`
+	UniLink   collar.Link    `gorm:"column:uni_link;index;not null;size:128;"`
 }
 
 func (m *OrderM) TableName() string {
@@ -43,6 +44,7 @@ func orderMto[T Matter](m *OrderM) *Order[T] {
 		Tag:       *hjson.MustFromBytes[tag.Tag](m.Tag),
 		Meta:      *hjson.MustFromBytes[dict.Dict](m.Meta),
 		Matter:    *hjson.MustFromBytes[T](m.Matter),
+		UniLink:   m.UniLink,
 	}
 	return ord
 }

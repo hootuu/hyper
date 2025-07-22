@@ -45,6 +45,7 @@ type CreateParas struct {
 	Ctrl     ctrl.Ctrl           `json:"ctrl"`
 	Tag      tag.Tag             `json:"tag"`
 	Meta     dict.Dict           `json:"meta"`
+	UniLink  collar.Link         `json:"uniLink"`
 }
 
 func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order[Matter], error) {
@@ -62,9 +63,10 @@ func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order
 			Quantity: paras.Quantity,
 			Amount:   paras.Amount,
 		},
-		Ctrl: paras.Ctrl,
-		Tag:  paras.Tag,
-		Meta: paras.Meta,
+		Ctrl:    paras.Ctrl,
+		Tag:     paras.Tag,
+		Meta:    paras.Meta,
+		UniLink: paras.UniLink,
 	})
 	if err != nil {
 		return nil, err
