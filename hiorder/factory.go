@@ -180,8 +180,8 @@ func (f *Factory[T]) doStartup() (context.Context, error) {
 	iderCode := fmt.Sprintf("hyper_ord_%s_ider", strings.ToLower(f.Code()))
 	f.idGenerator, err = hnid.NewGenerator(iderCode,
 		hnid.NewOptions(1, 8).
-			SetTimestamp(hnid.Second, false).
-			SetAutoInc(6, 1, 999999, 1000),
+			SetTimestamp(hnid.Minute, false).
+			SetAutoInc(5, 1, 99999, 1000), //todo
 	)
 	if err != nil {
 		return nil, err
