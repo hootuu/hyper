@@ -9,6 +9,7 @@ import (
 	"github.com/hootuu/hyle/hfsm"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hpay/payment"
+	"github.com/hootuu/hyper/hshipping/shipping"
 	"gorm.io/datatypes"
 )
 
@@ -20,8 +21,8 @@ type OrderM struct {
 	Payer      collar.Link    `gorm:"column:payer;index;not null;size:128;"`
 	Payee      collar.Link    `gorm:"column:payee;index;not null;size:128;"`
 	Amount     hcoin.Amount   `gorm:"column:amount;autoIncrement:false;"`
-	PaymentID  payment.ID     `gorm:"column:payment_id;uniqueIndex;autoIncrement:false;"`
-	ShippingID payment.ID     `gorm:"column:shipping_id;uniqueIndex;autoIncrement:false;"`
+	PaymentID  payment.ID     `gorm:"column:payment_id;autoIncrement:false;"`
+	ShippingID shipping.ID    `gorm:"column:shipping_id;autoIncrement:false;"`
 	Status     hfsm.State     `gorm:"column:status;not null;"`
 	Matter     datatypes.JSON `gorm:"column:matter;type:jsonb;"`
 	UniLink    collar.Link    `gorm:"column:uni_link;index;not null;size:128;"`
