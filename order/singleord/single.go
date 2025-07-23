@@ -100,7 +100,7 @@ func (s *Single) PaymentPrepared(ctx context.Context, ordID hiorder.ID) (err err
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobPrepared(ctx, paymentID, 1, s.code)
+	err = hpay.JobPrepared(ctx, paymentID, 1, eng.GetOrder().Code)
 	if err != nil {
 		return errors.New("job prepared: " + err.Error())
 	}
