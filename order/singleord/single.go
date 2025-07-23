@@ -127,7 +127,7 @@ func (s *Single) PaymentCompleted(ctx context.Context, ordID hiorder.ID) (err er
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobCompleted(ctx, paymentID, 1, s.code)
+	err = hpay.JobCompleted(ctx, paymentID, 1, eng.GetOrder().Code)
 	if err != nil {
 		return errors.New("job completed: " + err.Error())
 	}
