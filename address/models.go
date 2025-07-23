@@ -36,6 +36,7 @@ type AddrM struct {
 	Province string                `gorm:"column:province;size:32;not null;"`
 	City     string                `gorm:"column:city;size:64;not null;"`
 	District string                `gorm:"column:district;size:64;not null;"`
+	RoomNo   string                `gorm:"column:room_no;size:64;not null;"`
 	Tag      string                `gorm:"column:tag;size:20"`
 }
 
@@ -47,6 +48,7 @@ func (m *AddrM) ToAddress() *Address {
 	return &Address{
 		ID:       m.ID,
 		Owner:    m.Owner,
+		RoomNo:   m.RoomNo,
 		Region:   m.Region,
 		Address:  m.Addr,
 		FullAddr: m.FullAddr,
