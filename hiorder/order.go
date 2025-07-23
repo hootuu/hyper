@@ -10,23 +10,25 @@ import (
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hpay/payment"
+	"github.com/hootuu/hyper/hshipping/shipping"
 	"github.com/spf13/cast"
 )
 
 type Order[T Matter] struct {
-	ID        ID           `json:"id"`
-	Code      Code         `json:"code"`
-	Title     string       `json:"title"`
-	Payer     collar.Link  `json:"payer"`
-	Payee     collar.Link  `json:"payee"`
-	Matter    T            `json:"matter"`
-	Amount    hcoin.Amount `json:"amount"`
-	PaymentID payment.ID   `json:"payment_id"`
-	Status    Status       `json:"status"`
-	Ctrl      ctrl.Ctrl    `json:"ctrl"`
-	Tag       tag.Tag      `json:"tag"`
-	Meta      dict.Dict    `json:"meta"`
-	UniLink   collar.Link  `json:"uni_link"`
+	ID         ID           `json:"id"`
+	Code       Code         `json:"code"`
+	Title      string       `json:"title"`
+	Payer      collar.Link  `json:"payer"`
+	Payee      collar.Link  `json:"payee"`
+	Matter     T            `json:"matter"`
+	Amount     hcoin.Amount `json:"amount"`
+	PaymentID  payment.ID   `json:"payment_id"`
+	ShippingID shipping.ID  `json:"shipping_id"`
+	Status     Status       `json:"status"`
+	Ctrl       ctrl.Ctrl    `json:"ctrl"`
+	Tag        tag.Tag      `json:"tag"`
+	Meta       dict.Dict    `json:"meta"`
+	UniLink    collar.Link  `json:"uni_link"`
 }
 
 func (ord *Order[T]) toModel() *OrderM {

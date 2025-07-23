@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/hootuu/helix/components/zplt"
 	"github.com/hootuu/helix/helix"
 	"github.com/hootuu/hyle/data/ctrl"
 	"github.com/hootuu/hyle/data/dict"
@@ -11,7 +10,6 @@ import (
 	"github.com/hootuu/hyle/data/pagination"
 	"github.com/hootuu/hyle/data/tag"
 	"github.com/hootuu/hyle/hypes/collar"
-	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hitopup"
 	"github.com/hootuu/hyper/hyperidx"
 	_ "github.com/hootuu/hyper/hyperidx"
@@ -49,14 +47,13 @@ func doTopupExample() {
 
 	uid := "USER_" + cast.ToString(time.Now().UnixMilli())
 
-	ord, err := gTopup.TopUp(context.Background(), hitopup.TopUpParas{
-		Title:        "这是一笔充值" + cast.ToString(time.Now().UnixMilli()),
-		Payer:        collar.Build("user", uid).Link(), // todo
-		PayerAccount: collar.Build("user", uid).Link(),
-		Amount:       9860,
-		Ctrl:         ctrl.MustNewCtrl(),
-		Tag:          tag.NewTag("ALIPAY"),
-		Meta:         dict.NewDict().Set("alipay_id", "16880929"),
+	ord, err := gTopup.TopUpCreate(context.Background(), hitopup.TopUpParas{
+		Title:  "这是一笔充值" + cast.ToString(time.Now().UnixMilli()),
+		Payer:  collar.Build("user", uid).Link(), // todo
+		Amount: 9860,
+		Ctrl:   ctrl.MustNewCtrl(),
+		Tag:    tag.NewTag("ALIPAY"),
+		Meta:   dict.NewDict().Set("alipay_id", "16880929"),
 	})
 	if err != nil {
 		panic(err)

@@ -5,6 +5,7 @@ import (
 	"github.com/hootuu/helix/storage/hmeili"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
+	"github.com/hootuu/hyper/hshipping/shipping"
 	"github.com/hootuu/hyper/hyperplt"
 	"github.com/meilisearch/meilisearch-go"
 	"go.uber.org/zap"
@@ -41,6 +42,8 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"status",
 		"timestamp",
 		"title",
+		"payment_id",
+		"shipping_id",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -74,7 +77,25 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["amount"] = m.Amount
 	doc["status"] = m.Status
 	doc["matter"] = m.Matter
-	//todo
+	doc["payment_id"] = m.PaymentID
+	doc["shipping_id"] = m.ShippingID
+	if m.ShippingID != 0 {
+		doc["shipping"], err = idx.GetShippingDigest(m.ShippingID)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return doc, nil
+}
+
+func (idx *TxOrdIndexer) GetShippingDigest(shippingID shipping.ID) (map[string]any, error) {
+	shipM, err := hdb.MustGet[shipping.ShipM](hyperplt.DB(), "id = ?", shippingID)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"uni_link": shipM.UniLink.MustToDict(),
+		"address":  shipM.Address,
+	}, nil
 }

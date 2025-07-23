@@ -3,18 +3,24 @@ package singleord
 import (
 	"context"
 	"errors"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/ctrl"
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/tag"
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
+	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hiprod/prod"
 	"github.com/hootuu/hyper/hpay"
 	"github.com/hootuu/hyper/hpay/payment"
+	"github.com/hootuu/hyper/hshipping"
+	"github.com/hootuu/hyper/hshipping/shipping"
+	"github.com/hootuu/hyper/hyperplt"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -105,7 +111,7 @@ func (s *Single) PaymentPrepared(ctx context.Context, ordID hiorder.ID) (err err
 	return nil
 }
 
-func (s *Single) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID) (err error) {
+func (s *Single) PaymentCompleted(ctx context.Context, ordID hiorder.ID) (err error) {
 	if hlog.IsElapseComponent() {
 		defer hlog.ElapseWithCtx(ctx, "hyper.topup.TopUpPaymentCompleted",
 			hlog.F(zap.Uint64("ordID", ordID)),
@@ -126,6 +132,101 @@ func (s *Single) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID) (e
 		return errors.New("job completed: " + err.Error())
 	}
 	return nil
+}
+
+func (s *Single) ShippingCreate(
+	ctx context.Context,
+	ordID hiorder.ID,
+	addr *shipping.Address,
+	ex *ex.Ex,
+) (err error) {
+	if hlog.IsElapseComponent() {
+		defer hlog.ElapseWithCtx(ctx, "hyper.single.ShippingPrepared",
+			hlog.F(zap.Uint64("ordID", ordID)),
+			func() []zap.Field {
+				if err != nil {
+					return []zap.Field{zap.Error(err)}
+				}
+				return nil
+			})()
+	}
+	eng, err := s.factory.Load(ctx, ordID)
+	if err != nil {
+		return errors.New("load order fail: " + err.Error())
+	}
+	uniLink := s.BuildShippingCollar(ordID)
+	err = hdb.Tx(hyperplt.Tx(ctx), func(tx *gorm.DB) error {
+		innerCtx := hdb.TxCtx(tx)
+		shippingID, err := hshipping.ShippingCreate(innerCtx, hshipping.CreateParas{
+			UniLink: uniLink.Link(),
+			Address: addr,
+			Ex:      ex,
+		})
+		if err != nil {
+			return err
+		}
+		err = eng.SetShipping(innerCtx, ordID, shippingID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return nil
+}
+
+func (s *Single) ShippingPrepared(
+	ctx context.Context,
+	ordID hiorder.ID,
+	courierCode shipping.CourierCode,
+	trackingNo string,
+	meta ex.Meta,
+) (err error) {
+	if hlog.IsElapseComponent() {
+		defer hlog.ElapseWithCtx(ctx, "hyper.single.ShippingPrepared",
+			hlog.F(zap.Uint64("ordID", ordID)),
+			func() []zap.Field {
+				if err != nil {
+					return []zap.Field{zap.Error(err)}
+				}
+				return nil
+			})()
+	}
+	uniLink := s.BuildShippingCollar(ordID)
+	err = hshipping.ShippingPrepared(
+		ctx,
+		uniLink.Link(),
+		courierCode,
+		trackingNo,
+		meta,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Single) ShippingCompleted(ctx context.Context, ordID hiorder.ID, meta ex.Meta) (err error) {
+	if hlog.IsElapseComponent() {
+		defer hlog.ElapseWithCtx(ctx, "hyper.single.ShippingCompleted",
+			hlog.F(zap.Uint64("ordID", ordID)),
+			func() []zap.Field {
+				if err != nil {
+					return []zap.Field{zap.Error(err)}
+				}
+				return nil
+			})()
+	}
+	uniLink := s.BuildShippingCollar(ordID)
+	err = hshipping.ShippingCompleted(ctx, uniLink.Link(), meta)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Single) BuildShippingCollar(ordID hiorder.ID) collar.Collar {
+	return collar.Build(s.code, cast.ToString(ordID))
 }
 
 func (s *Single) doInit() error {

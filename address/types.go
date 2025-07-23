@@ -23,6 +23,7 @@ type Region struct {
 	Children []*Region `json:"children"`
 }
 
+type ID = string
 type Address struct {
 	ID       string                `json:"id"`
 	Owner    sattva.Identification `json:"owners"`
