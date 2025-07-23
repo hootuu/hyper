@@ -28,6 +28,7 @@ func AddAddress(addr *Address) (*Address, error) {
 		Province: addr.Province,
 		City:     addr.City,
 		District: addr.District,
+		RoomNo:   addr.RoomNo,
 		Tag:      addr.Tag,
 	})
 	if err != nil {
@@ -50,6 +51,7 @@ func MutAddress(addr *Address) error {
 		Province: addr.Province,
 		City:     addr.City,
 		District: addr.District,
+		RoomNo:   addr.RoomNo,
 		Tag:      addr.Tag,
 	})
 }

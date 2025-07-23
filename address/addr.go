@@ -139,6 +139,9 @@ func mutAddr(mutM *AddrM) error {
 	if dbM.Tag != mutM.Tag {
 		mut["tag"] = mutM.Tag
 	}
+	if dbM.RoomNo != mutM.RoomNo {
+		mut["room_no"] = mutM.RoomNo
+	}
 	err = hdb.Tx(zplt.HelixPgDB().PG(), func(tx *gorm.DB) error {
 		if mutM.Default {
 			err := hdb.Update[AddrM](tx, map[string]any{
