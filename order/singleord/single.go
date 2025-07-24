@@ -130,6 +130,10 @@ func (s *Single) PaymentPrepared(
 	return nil
 }
 
+func (s *Single) GetIdByUniLink(uniLink collar.Link) (hiorder.ID, error) {
+	return s.factory.GetIDByUniLink(uniLink)
+}
+
 func (s *Single) PaymentCompleted(
 	ctx context.Context,
 	ordID hiorder.ID,
