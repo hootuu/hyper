@@ -106,10 +106,6 @@ func (s *Single) PaymentPrepared(
 		return errors.New("load order fail: " + err.Error())
 	}
 	ord := eng.GetOrder()
-	if ord.PaymentID != 0 {
-		return errors.New("payment should be 0 with single order")
-	}
-
 	paymentID, err := s.factory.SetPayment(ctx, ord.ID, []payment.JobDefine{
 		&thirdjob.Job{
 			ThirdCode: chanCode,
