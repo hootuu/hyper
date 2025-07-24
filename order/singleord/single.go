@@ -119,7 +119,7 @@ func (s *Single) PaymentPrepared(
 		exM,
 	)
 
-	err = hpay.JobPrepared(ctx, paymentID, 1, eng.GetOrder().Code)
+	err = hpay.JobPrepared(ctx, paymentID, 1)
 	if err != nil {
 		return errors.New("job prepared: " + err.Error())
 	}
@@ -150,7 +150,7 @@ func (s *Single) PaymentCompleted(
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobCompleted(ctx, paymentID, 1, eng.GetOrder().Code, payNumber)
+	err = hpay.JobCompleted(ctx, paymentID, 1, payNumber)
 	if err != nil {
 		return errors.New("job completed: " + err.Error())
 	}

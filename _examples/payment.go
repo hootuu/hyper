@@ -105,7 +105,7 @@ func main() {
 			panic(err)
 		}
 
-		err = hpay.JobPrepared(ctx, payId, 2, "TeXT")
+		err = hpay.JobPrepared(ctx, payId, 2)
 		if err != nil {
 			panic(err)
 		}
@@ -115,7 +115,7 @@ func main() {
 			panic(err)
 		}
 
-		err = hpay.JobCompleted(ctx, payId, 2, "TeXT")
+		err = hpay.JobCompleted(ctx, payId, 2)
 		if err != nil {
 			panic(err)
 		}

@@ -19,16 +19,15 @@ func Advance(ctx context.Context, id payment.ID) error {
 	return payment.Advance(ctx, id)
 }
 
-func JobPrepared(ctx context.Context, id payment.ID, seq int, checkCode string) error {
-	return payment.DoJobPrepared(ctx, id, seq, checkCode)
+func JobPrepared(ctx context.Context, id payment.ID, seq int) error {
+	return payment.DoJobPrepared(ctx, id, seq)
 }
 
 func JobCompleted(
 	ctx context.Context,
 	id payment.ID,
 	seq int,
-	checkCode string,
 	payNumber string,
 ) error {
-	return payment.DoJobCompleted(ctx, id, seq, checkCode, payNumber)
+	return payment.DoJobCompleted(ctx, id, seq, payNumber)
 }

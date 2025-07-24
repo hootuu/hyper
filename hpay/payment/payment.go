@@ -346,7 +346,7 @@ func OnJobTimeout(ctx context.Context, job *Job) (err error) {
 	return nil
 }
 
-func DoJobPrepared(ctx context.Context, pid ID, seq int, checkCode string) (err error) {
+func DoJobPrepared(ctx context.Context, pid ID, seq int) (err error) {
 	jobID := BuildJobID(pid, seq)
 	tx := hyperplt.Tx(ctx)
 	payM, err := hdb.MustGet[PayM](tx, "id = ?", pid)
@@ -354,6 +354,8 @@ func DoJobPrepared(ctx context.Context, pid ID, seq int, checkCode string) (err 
 		return errors.New("load payment failed: " + err.Error())
 	}
 	switch payM.Status {
+	case Prepared:
+		return nil
 	case Preparing:
 	default:
 		return errors.New("the payment status is not preparing")
@@ -405,7 +407,6 @@ func DoJobCompleted(
 	ctx context.Context,
 	pid ID,
 	seq int,
-	checkCode string,
 	payNumber string,
 ) (err error) {
 	jobID := BuildJobID(pid, seq)

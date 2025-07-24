@@ -129,7 +129,7 @@ func (t *TopUp) TopUpPaymentPrepared(ctx context.Context, ordID hiorder.ID) (err
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobPrepared(ctx, paymentID, 1, t.code)
+	err = hpay.JobPrepared(ctx, paymentID, 1)
 	if err != nil {
 		return errors.New("job prepared: " + err.Error())
 	}
@@ -156,7 +156,7 @@ func (t *TopUp) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID, pay
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobCompleted(ctx, paymentID, 1, eng.GetOrder().Code, payNumber)
+	err = hpay.JobCompleted(ctx, paymentID, 1, payNumber)
 	if err != nil {
 		return errors.New("job completed: " + err.Error())
 	}
