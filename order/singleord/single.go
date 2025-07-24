@@ -106,6 +106,10 @@ func (s *Single) PaymentPrepared(
 		return errors.New("load order fail: " + err.Error())
 	}
 	ord := eng.GetOrder()
+	if ord.PaymentID != 0 {
+		//todo has been created
+		return nil
+	}
 	paymentID, err := s.factory.SetPayment(ctx, ord.ID, []payment.JobDefine{
 		&thirdjob.Job{
 			ThirdCode: chanCode,
