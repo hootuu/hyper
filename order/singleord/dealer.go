@@ -58,7 +58,7 @@ func (d *Dealer) OnPaymentAltered(alter *hiorder.PaymentAltered[Matter]) (err er
 			hlog.Err("load engine failed", hlog.TraceInfo(ctx), zap.Error(err))
 			return errors.New("load engine failed: " + err.Error())
 		}
-		err = eng.Complete(ctx)
+		err = eng.Consense(ctx)
 		if err != nil {
 			hlog.Err("complete engine failed", hlog.TraceInfo(ctx), zap.Error(err))
 			return errors.New("complete engine failed: " + err.Error())
