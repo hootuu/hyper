@@ -101,11 +101,13 @@ func regionInit() error {
 	}
 	err = honce.Do("hyper.address.region.init.v1", func() error {
 		helix.AfterStartup(func() {
-			amapKey, err := hcfg.MustGetString("hyper.address.amap.key")
-			if err != nil {
-				hsys.Exit(err)
-				return
-			}
+			//amapKey, err := hcfg.MustGetString("hyper.address.amap.key")
+			//if err != nil {
+			//	hsys.Exit(err)
+			//	return
+			//}
+			amapKey := hcfg.GetString("hyper.address.amap.key", "")
+
 			p := maps.NewAmapProvider(amapKey)
 			err = p.RegionSync(regionSave)
 			if err != nil {

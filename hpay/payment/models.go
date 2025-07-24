@@ -45,7 +45,7 @@ type JobM struct {
 	PaymentSeq int            `gorm:"column:payment_seq;uniqueIndex:uk_pay_seq;"`
 	Status     JobStatus      `gorm:"column:status;index;"`
 	Ctx        datatypes.JSON `gorm:"column:ctx;type:jsonb;"`
-	CheckCode  string         `gorm:"column:check_code;size:32;"`
+	PayNo      string         `gorm:"column:pay_no;size:100;"`
 }
 
 func (m *JobM) TableName() string {

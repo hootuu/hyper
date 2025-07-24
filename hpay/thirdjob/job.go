@@ -15,7 +15,6 @@ type Job struct {
 	ThirdCode string `json:"third_code"`
 	Amount    uint64 `json:"amount"`
 	Ex        *ex.Ex `json:"ex"`
-	CheckCode string `json:"check_code"`
 }
 
 func (j *Job) Validate() error {
@@ -24,9 +23,6 @@ func (j *Job) Validate() error {
 	}
 	if j.Amount == 0 {
 		return errors.New("require amount")
-	}
-	if j.CheckCode == "" {
-		return errors.New("require check_code")
 	}
 	return nil
 }
@@ -45,8 +41,4 @@ func (j *Job) GetCtx() dict.Dict {
 		"amount":     j.Amount,
 		//todo add ex
 	})
-}
-
-func (j *Job) GetCheckCode() string {
-	return j.CheckCode
 }

@@ -33,7 +33,6 @@ type JobDefine interface {
 	GetChannel() Channel
 	GetAmount() uint64
 	GetCtx() dict.Dict
-	GetCheckCode() string
 }
 
 type JobExecutor interface {

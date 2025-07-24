@@ -23,6 +23,12 @@ func JobPrepared(ctx context.Context, id payment.ID, seq int, checkCode string) 
 	return payment.DoJobPrepared(ctx, id, seq, checkCode)
 }
 
-func JobCompleted(ctx context.Context, id payment.ID, seq int, checkCode string) error {
-	return payment.DoJobCompleted(ctx, id, seq, checkCode)
+func JobCompleted(
+	ctx context.Context,
+	id payment.ID,
+	seq int,
+	checkCode string,
+	payNumber string,
+) error {
+	return payment.DoJobCompleted(ctx, id, seq, checkCode, payNumber)
 }

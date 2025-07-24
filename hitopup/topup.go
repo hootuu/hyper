@@ -11,6 +11,7 @@ import (
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
+	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hpay"
 	"github.com/hootuu/hyper/hpay/payment"
@@ -91,8 +92,11 @@ func (t *TopUp) TopUpCreate(ctx context.Context, paras TopUpParas) (*hiorder.Ord
 		Payment: []payment.JobDefine{&thirdjob.Job{
 			ThirdCode: paras.PayChannelCode,
 			Amount:    paras.Amount,
-			Ex:        nil,
-			CheckCode: t.code,
+			Ex: &ex.Ex{
+				Ctrl: paras.Ctrl,
+				Tag:  paras.Tag,
+				Meta: paras.Meta,
+			},
 		}},
 		Matter: Matter{InAccount: paras.InAccountAddr},
 		Ctrl:   paras.Ctrl,
@@ -136,7 +140,7 @@ func (t *TopUp) TopUpPaymentPrepared(ctx context.Context, ordID hiorder.ID) (err
 	return nil
 }
 
-func (t *TopUp) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID) (err error) {
+func (t *TopUp) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID, payNumber string) (err error) {
 	if hlog.IsElapseComponent() {
 		defer hlog.ElapseWithCtx(ctx, "hyper.topup.TopUpPaymentCompleted",
 			hlog.F(zap.Uint64("ordID", ordID)),
@@ -152,7 +156,7 @@ func (t *TopUp) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID) (er
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobCompleted(ctx, paymentID, 1, t.code)
+	err = hpay.JobCompleted(ctx, paymentID, 1, eng.GetOrder().Code, payNumber)
 	if err != nil {
 		return errors.New("job completed: " + err.Error())
 	}

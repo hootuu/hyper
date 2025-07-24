@@ -105,7 +105,6 @@ func Create(ctx context.Context, paras *CreateParas) (id ID, err error) {
 			PaymentSeq: seq,
 			Status:     JobInitialized,
 			Ctx:        hjson.MustToBytes(job.GetCtx()),
-			CheckCode:  job.GetCheckCode(),
 		}
 		jobArrM = append(jobArrM, jobM)
 	}
@@ -363,9 +362,6 @@ func DoJobPrepared(ctx context.Context, pid ID, seq int, checkCode string) (err 
 	if err != nil {
 		return errors.New("load job failed: " + err.Error())
 	}
-	if jobM.CheckCode != checkCode {
-		return fmt.Errorf("invalid job check code: %s vs %s", jobM.CheckCode, checkCode)
-	}
 	payPrepared := false
 	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		jobMut := map[string]any{
@@ -405,7 +401,13 @@ func DoJobPrepared(ctx context.Context, pid ID, seq int, checkCode string) (err 
 	return nil
 }
 
-func DoJobCompleted(ctx context.Context, pid ID, seq int, checkCode string) (err error) {
+func DoJobCompleted(
+	ctx context.Context,
+	pid ID,
+	seq int,
+	checkCode string,
+	payNumber string,
+) (err error) {
 	jobID := BuildJobID(pid, seq)
 	tx := hyperplt.Tx(ctx)
 	payM, err := hdb.MustGet[PayM](tx, "id = ?", pid)
@@ -421,13 +423,11 @@ func DoJobCompleted(ctx context.Context, pid ID, seq int, checkCode string) (err
 	if err != nil {
 		return err
 	}
-	if jobM.CheckCode != checkCode {
-		return fmt.Errorf("invalid job check code: %s vs %s", jobM.CheckCode, checkCode)
-	}
 	payCompleted := false
 	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		jobMut := map[string]any{
 			"status": JobCompleted,
+			"pay_no": payNumber,
 		}
 		row, err := hdb.UpdateX[JobM](tx, jobMut,
 			"id = ? AND status = ?", jobM.ID, jobM.Status)

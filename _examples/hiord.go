@@ -7,12 +7,15 @@ import (
 	"github.com/hootuu/hyle/data/ctrl"
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
+	"github.com/hootuu/hyle/data/idx"
 	"github.com/hootuu/hyle/data/pagination"
 	"github.com/hootuu/hyle/data/tag"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hitopup"
 	"github.com/hootuu/hyper/hyperidx"
 	_ "github.com/hootuu/hyper/hyperidx"
+	"github.com/hootuu/hyper/order/singleord"
+	"github.com/nineora/lightv/_examples/tools"
 	"github.com/nineora/lightv/qing"
 	"github.com/spf13/cast"
 	"time"
@@ -20,9 +23,39 @@ import (
 
 func main() {
 	helix.AfterStartup(func() {
-		doTopupExample()
+		//doTopupExample()
+		doSingleExample()
 	})
 	helix.Startup()
+}
+
+func doSingleExample() {
+	gSingle, err := singleord.Build(
+		"TEST_SINGLE",
+		collar.Build("ZF", "000001").Link(),
+	)
+	if err != nil {
+		panic(err)
+	}
+	uid, _ := tools.CreateUser()
+	ord, err := gSingle.Create(context.Background(), &singleord.CreateParas{
+		SkuID:    10009,
+		Payer:    collar.Build("USER", uid).Link(),
+		Quantity: 1,
+		Amount:   1000,
+		Ctrl:     nil,
+		Tag:      nil,
+		Meta:     nil,
+		UniLink:  collar.Build("RAND", idx.New()).Link(),
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(hjson.MustToString(ord))
+	err = gSingle.PaymentPrepared(context.Background(), ord.ID, "ALIPAY", nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func doTopupExample() {

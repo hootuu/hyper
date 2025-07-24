@@ -15,6 +15,7 @@ import (
 	"github.com/hootuu/hyper/hiprod/prod"
 	"github.com/hootuu/hyper/hpay"
 	"github.com/hootuu/hyper/hpay/payment"
+	"github.com/hootuu/hyper/hpay/thirdjob"
 	"github.com/hootuu/hyper/hshipping"
 	"github.com/hootuu/hyper/hshipping/shipping"
 	"github.com/hootuu/hyper/hyperplt"
@@ -43,15 +44,14 @@ func Build(code hiorder.Code, payee collar.Link) (*Single, error) {
 }
 
 type CreateParas struct {
-	SkuID    prod.SkuID          `json:"sku_id"`
-	Payer    collar.Link         `json:"payer"`
-	Quantity uint32              `json:"quantity"`
-	Amount   hcoin.Amount        `json:"amount"`
-	Payment  []payment.JobDefine `json:"payment"`
-	Ctrl     ctrl.Ctrl           `json:"ctrl"`
-	Tag      tag.Tag             `json:"tag"`
-	Meta     dict.Dict           `json:"meta"`
-	UniLink  collar.Link         `json:"uniLink"`
+	SkuID    prod.SkuID   `json:"sku_id"`
+	Payer    collar.Link  `json:"payer"`
+	Quantity uint32       `json:"quantity"`
+	Amount   hcoin.Amount `json:"amount"`
+	Ctrl     ctrl.Ctrl    `json:"ctrl"`
+	Tag      tag.Tag      `json:"tag"`
+	Meta     dict.Dict    `json:"meta"`
+	UniLink  collar.Link  `json:"uniLink"`
 }
 
 func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order[Matter], error) {
@@ -60,7 +60,7 @@ func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order
 		Payer:   paras.Payer,
 		Payee:   s.payee,
 		Amount:  paras.Amount,
-		Payment: paras.Payment,
+		Payment: nil,
 		Matter: Matter{
 			SkuID:    paras.SkuID,
 			VwhID:    0,
@@ -84,7 +84,12 @@ func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order
 	return engine.GetOrder(), nil
 }
 
-func (s *Single) PaymentPrepared(ctx context.Context, ordID hiorder.ID) (err error) {
+func (s *Single) PaymentPrepared(
+	ctx context.Context,
+	ordID hiorder.ID,
+	chanCode string,
+	exM *ex.Ex,
+) (err error) {
 	if hlog.IsElapseComponent() {
 		defer hlog.ElapseWithCtx(ctx, "hyper.single.PaymentPrepared",
 			hlog.F(zap.Uint64("ordID", ordID)),
@@ -97,9 +102,23 @@ func (s *Single) PaymentPrepared(ctx context.Context, ordID hiorder.ID) (err err
 	}
 	eng, err := s.factory.Load(ctx, ordID)
 	if err != nil {
+		hlog.Err("s.factory.Load", hlog.TraceInfo(ctx), zap.Error(err))
 		return errors.New("load order fail: " + err.Error())
 	}
-	paymentID := eng.GetOrder().PaymentID
+	ord := eng.GetOrder()
+	if ord.PaymentID != 0 {
+		return errors.New("payment should be 0 with single order")
+	}
+
+	paymentID, err := s.factory.SetPayment(ctx, ord.ID, []payment.JobDefine{
+		&thirdjob.Job{
+			ThirdCode: chanCode,
+			Amount:    ord.Amount,
+			Ex:        exM,
+		}},
+		exM,
+	)
+
 	err = hpay.JobPrepared(ctx, paymentID, 1, eng.GetOrder().Code)
 	if err != nil {
 		return errors.New("job prepared: " + err.Error())
@@ -111,7 +130,11 @@ func (s *Single) PaymentPrepared(ctx context.Context, ordID hiorder.ID) (err err
 	return nil
 }
 
-func (s *Single) PaymentCompleted(ctx context.Context, ordID hiorder.ID) (err error) {
+func (s *Single) PaymentCompleted(
+	ctx context.Context,
+	ordID hiorder.ID,
+	payNumber string,
+) (err error) {
 	if hlog.IsElapseComponent() {
 		defer hlog.ElapseWithCtx(ctx, "hyper.topup.TopUpPaymentCompleted",
 			hlog.F(zap.Uint64("ordID", ordID)),
@@ -127,7 +150,7 @@ func (s *Single) PaymentCompleted(ctx context.Context, ordID hiorder.ID) (err er
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobCompleted(ctx, paymentID, 1, eng.GetOrder().Code)
+	err = hpay.JobCompleted(ctx, paymentID, 1, eng.GetOrder().Code, payNumber)
 	if err != nil {
 		return errors.New("job completed: " + err.Error())
 	}
