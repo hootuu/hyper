@@ -202,13 +202,17 @@ func (f *Factory[T]) Code() Code {
 
 // GetIDByUniLink todo add unilink with unindexKey
 func (f *Factory[T]) GetIDByUniLink(uniLink collar.Link) (ID, error) {
-	var idM ID
+	var idArrM []ID
 	tx := hyperplt.DB().Model(&OrderM{}).
-		Where("uni_link = ?", uniLink).Order("auto_id desc").First(&idM)
+		Where("uni_link = ?", uniLink).
+		Order("auto_id desc").Limit(1).Find(&idArrM)
 	if tx.Error != nil {
 		return 0, tx.Error
 	}
-	return idM, nil
+	if len(idArrM) == 0 {
+		return 0, nil
+	}
+	return idArrM[0], nil
 }
 
 func (f *Factory[T]) OrderCollar(id ID) collar.Collar {
