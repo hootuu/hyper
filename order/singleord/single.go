@@ -138,6 +138,15 @@ func (s *Single) GetIdByUniLink(uniLink collar.Link) (hiorder.ID, error) {
 	return s.factory.GetIDByUniLink(uniLink)
 }
 
+// GetOrder todo will fix it
+func (s *Single) GetOrder(id hiorder.ID) (*hiorder.Order[Matter], error) {
+	eng, err := s.factory.Load(context.Background(), id)
+	if err != nil {
+		return nil, errors.New("load order fail: " + err.Error())
+	}
+	return eng.GetOrder(), nil
+}
+
 func (s *Single) PaymentCompleted(
 	ctx context.Context,
 	ordID hiorder.ID,
