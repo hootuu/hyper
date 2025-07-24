@@ -114,6 +114,10 @@ func (s *Single) PaymentPrepared(
 		}},
 		exM,
 	)
+	if err != nil {
+		hlog.Err("s.factory.SetPayment", hlog.TraceInfo(ctx), zap.Error(err))
+		return errors.New("SetPayment fail: " + err.Error())
+	}
 
 	err = hpay.JobPrepared(ctx, paymentID, 1)
 	if err != nil {

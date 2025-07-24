@@ -155,6 +155,11 @@ func (f *Factory[T]) SetPayment(
 		hlog.Err("MustGet[OrderM] err", hlog.TraceInfo(ctx), zap.Error(err))
 		return 0, errors.New("Load Order Failed: " + err.Error())
 	}
+	if ordM.PaymentID != 0 {
+		//TODO
+		hlog.Info("ordM.PaymentID!=0", hlog.TraceInfo(ctx), zap.Error(err))
+		return ordM.PaymentID, nil
+	}
 	err = hdb.Tx(hyperplt.Tx(ctx), func(tx *gorm.DB) error {
 		innerCtx := hdb.TxCtx(tx, ctx)
 		paymentID, err = hpay.Create(innerCtx, payment.CreateParas{
@@ -165,6 +170,10 @@ func (f *Factory[T]) SetPayment(
 			Ex:      exM,
 			Jobs:    paymentArr,
 		})
+		if err != nil {
+			hlog.Err("Create err", hlog.TraceInfo(ctx), zap.Error(err))
+			return errors.New("Create error: " + err.Error())
+		}
 		err = payment.Prepare(innerCtx, paymentID)
 		if err != nil {
 			hlog.Err("payment.Prepare err", hlog.TraceInfo(ctx), zap.Error(err))
@@ -189,6 +198,17 @@ func (f *Factory[T]) SetPayment(
 
 func (f *Factory[T]) Code() Code {
 	return f.dealer.Code()
+}
+
+// GetIDByUniLink todo add unilink with unindexKey
+func (f *Factory[T]) GetIDByUniLink(uniLink collar.Link) (ID, error) {
+	var idM ID
+	tx := hyperplt.DB().Model(&OrderM{}).
+		Where("uni_link = ?", uniLink).Order("auto_id desc").First(&idM)
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+	return idM, nil
 }
 
 func (f *Factory[T]) OrderCollar(id ID) collar.Collar {
