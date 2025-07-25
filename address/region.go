@@ -9,7 +9,6 @@ import (
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hcfg"
 	"github.com/hootuu/hyle/hlog"
-	"github.com/hootuu/hyle/hsys"
 	"github.com/hootuu/hyper/address/maps"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -111,7 +110,8 @@ func regionInit() error {
 			p := maps.NewAmapProvider(amapKey)
 			err = p.RegionSync(regionSave)
 			if err != nil {
-				hsys.Exit(err)
+				//hsys.Exit(err) //todo
+				fmt.Println(err)
 				return
 			}
 		})
