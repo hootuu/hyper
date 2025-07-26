@@ -25,7 +25,7 @@ type OrderM struct {
 	ShippingID shipping.ID    `gorm:"column:shipping_id;autoIncrement:false;"`
 	Status     hfsm.State     `gorm:"column:status;not null;"`
 	Matter     datatypes.JSON `gorm:"column:matter;type:jsonb;"`
-	UniLink    collar.Link    `gorm:"column:uni_link;index;not null;size:128;"`
+	UniLink    collar.Link    `gorm:"column:uni_link;uniqueIndex;not null;size:128;"`
 }
 
 func (m *OrderM) TableName() string {

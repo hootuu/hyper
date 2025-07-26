@@ -84,6 +84,7 @@ func (f *Factory[T]) New(ctx context.Context, paras *CreateParas[T]) (engine *En
 		Ctrl:      paras.Ctrl,
 		Tag:       paras.Tag,
 		Meta:      paras.Meta,
+		UniLink:   paras.UniLink,
 	}
 
 	if len(paras.Payment) > 0 {

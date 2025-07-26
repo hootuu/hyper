@@ -44,6 +44,7 @@ func Build(code hiorder.Code, payee collar.Link) (*Single, error) {
 }
 
 type CreateParas struct {
+	Title    string       `json:"title"`
 	SkuID    prod.SkuID   `json:"sku_id"`
 	Payer    collar.Link  `json:"payer"`
 	Quantity uint32       `json:"quantity"`
@@ -56,7 +57,7 @@ type CreateParas struct {
 
 func (s *Single) Create(ctx context.Context, paras *CreateParas) (*hiorder.Order[Matter], error) {
 	engine, err := s.factory.New(ctx, &hiorder.CreateParas[Matter]{
-		Title:   "[PROD]" + cast.ToString(paras.SkuID),
+		Title:   paras.Title,
 		Payer:   paras.Payer,
 		Payee:   s.payee,
 		Amount:  paras.Amount,
