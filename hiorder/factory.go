@@ -206,6 +206,7 @@ func (f *Factory[T]) Code() Code {
 func (f *Factory[T]) GetIDByUniLink(uniLink collar.Link) (ID, error) {
 	var idArrM []ID
 	tx := hyperplt.DB().Model(&OrderM{}).
+		Select("id").
 		Where("uni_link = ?", uniLink).
 		Order("auto_id desc").Limit(1).Find(&idArrM)
 	if tx.Error != nil {
