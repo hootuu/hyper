@@ -91,7 +91,6 @@ func main() {
 					ThirdCode: "WECHAT",
 					Amount:    100,
 					Ex:        ex.EmptyEx(),
-					CheckCode: "TeXT",
 				},
 			},
 		})
@@ -115,7 +114,7 @@ func main() {
 			panic(err)
 		}
 
-		err = hpay.JobCompleted(ctx, payId, 2)
+		err = hpay.JobCompleted(ctx, payId, 2, "xxxx")
 		if err != nil {
 			panic(err)
 		}
