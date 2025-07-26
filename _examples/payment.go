@@ -21,7 +21,7 @@ import (
 
 func main() {
 	helix.AfterStartup(func() {
-		payment.MqRegisterPaymentAlter("PAY_BIZ", func(ctx context.Context, payload *payment.PaymentPayload) error {
+		payment.MqRegisterPaymentAlter("PAY_BIZ", func(ctx context.Context, payload *payment.AlterPayload) error {
 			fmt.Println("ON PAYMENT ALTER", hjson.MustToString(payload))
 			if payload.IsCompleted() {
 				fmt.Println("[COMPLETED]")

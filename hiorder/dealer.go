@@ -9,6 +9,7 @@ type Dealer[T Matter] interface {
 	Code() Code
 	Build(ord Order[T]) (Deal[T], error)
 	OnPaymentAltered(alter *PaymentAltered[T]) error
+	OnShippingAltered(alter *ShippingAltered[T]) error
 }
 
 type Deal[T Matter] interface {

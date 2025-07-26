@@ -25,6 +25,7 @@ type Order[T Matter] struct {
 	PaymentID  payment.ID   `json:"payment_id"`
 	ShippingID shipping.ID  `json:"shipping_id"`
 	Status     Status       `json:"status"`
+	ExStatus   ExStatus     `json:"ex_status"`
 	Ctrl       ctrl.Ctrl    `json:"ctrl"`
 	Tag        tag.Tag      `json:"tag"`
 	Meta       dict.Dict    `json:"meta"`
@@ -46,6 +47,7 @@ func (ord *Order[T]) toModel() *OrderM {
 		Amount:    ord.Amount,
 		PaymentID: ord.PaymentID,
 		Status:    ord.Status,
+		ExStatus:  ord.ExStatus,
 		Matter:    hjson.MustToBytes(ord.Matter),
 		UniLink:   ord.UniLink,
 	}

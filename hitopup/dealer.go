@@ -64,3 +64,7 @@ func (d *Dealer) OnPaymentAltered(alter *hiorder.PaymentAltered[Matter]) error {
 	}
 	return nil
 }
+
+func (d *Dealer) OnShippingAltered(alter *hiorder.ShippingAltered[Matter]) error {
+	return nil
+}

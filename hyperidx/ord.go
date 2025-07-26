@@ -44,6 +44,8 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"title",
 		"payment_id",
 		"shipping_id",
+		"tag",
+		"ctrl",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -85,6 +87,10 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 			return nil, err
 		}
 	}
+	doc["tag"] = m.Tag
+	doc["ctrl"] = m.Ctrl
+	doc["meta"] = m.Meta
+	//doc["ex_status"] = m.ex //todo
 
 	return doc, nil
 }

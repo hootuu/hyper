@@ -17,7 +17,7 @@ const (
 	MqTopicPayment = "HYPER_PAYMENT_ALTER"
 )
 
-type PaymentPayload struct {
+type AlterPayload struct {
 	PaymentID ID     `json:"payment_id"`
 	BizCode   string `json:"biz_code"`
 	BizID     string `json:"biz_id"`
@@ -25,13 +25,13 @@ type PaymentPayload struct {
 	Dst       Status `json:"dst"`
 }
 
-func (p *PaymentPayload) IsCompleted() bool {
+func (p *AlterPayload) IsCompleted() bool {
 	return p.Dst == Completed
 }
 
 func mqPublishPaymentAlter(pid ID, bizLink collar.Link, srcStatus Status, dstStatus Status) {
 	var err error
-	payload := &PaymentPayload{
+	payload := &AlterPayload{
 		PaymentID: pid,
 		Src:       srcStatus,
 		Dst:       dstStatus,
@@ -51,11 +51,11 @@ func mqPublishPaymentAlter(pid ID, bizLink collar.Link, srcStatus Status, dstSta
 }
 
 var gMqPaymentConsumer *hmq.Consumer
-var gMqPaymentHandlerMap = make(map[string]func(ctx context.Context, payload *PaymentPayload) error)
+var gMqPaymentHandlerMap = make(map[string]func(ctx context.Context, payload *AlterPayload) error)
 
 func MqRegisterPaymentAlter(
 	bizCode string,
-	handle func(ctx context.Context, payload *PaymentPayload) error,
+	handle func(ctx context.Context, payload *AlterPayload) error,
 ) {
 	gMqPaymentHandlerMap[bizCode] = handle
 }
@@ -65,7 +65,7 @@ func onMqPaymentAlter(ctx context.Context, msg *hmq.Message) error {
 		hlog.Fix("hyper.payment.notify: msg is nil")
 		return nil
 	}
-	payload := hjson.MustFromBytes[PaymentPayload](msg.Payload)
+	payload := hjson.MustFromBytes[AlterPayload](msg.Payload)
 	if payload == nil {
 		hlog.Fix("hyper.payment.notify: payload is nil")
 		return nil

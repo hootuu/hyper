@@ -24,6 +24,7 @@ type OrderM struct {
 	PaymentID  payment.ID     `gorm:"column:payment_id;autoIncrement:false;"`
 	ShippingID shipping.ID    `gorm:"column:shipping_id;autoIncrement:false;"`
 	Status     hfsm.State     `gorm:"column:status;not null;"`
+	ExStatus   hfsm.State     `gorm:"column:ex_status;not null;"`
 	Matter     datatypes.JSON `gorm:"column:matter;type:jsonb;"`
 	UniLink    collar.Link    `gorm:"column:uni_link;uniqueIndex;not null;size:128;"`
 }
@@ -43,6 +44,7 @@ func orderMto[T Matter](m *OrderM) *Order[T] {
 		PaymentID:  m.PaymentID,
 		ShippingID: m.ShippingID,
 		Status:     m.Status,
+		ExStatus:   m.ExStatus,
 		Ctrl:       m.Ctrl,
 		Tag:        *hjson.MustFromBytes[tag.Tag](m.Tag),
 		Meta:       *hjson.MustFromBytes[dict.Dict](m.Meta),

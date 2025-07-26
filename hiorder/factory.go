@@ -16,6 +16,7 @@ import (
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hpay"
 	"github.com/hootuu/hyper/hpay/payment"
+	"github.com/hootuu/hyper/hshipping/shipping"
 	"github.com/hootuu/hyper/hyperplt"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
@@ -220,7 +221,7 @@ func (f *Factory[T]) OrderCollar(id ID) collar.Collar {
 	return collar.Build(f.Code(), fmt.Sprintf("%d", id))
 }
 
-func (f *Factory[T]) onPaymentAltered(payload *payment.PaymentPayload) (err error) {
+func (f *Factory[T]) onPaymentAltered(payload *payment.AlterPayload) (err error) {
 	if payload == nil {
 		hlog.Fix("hyper.f.onPaymentAlter: payload is nil")
 		return nil
@@ -256,6 +257,42 @@ func (f *Factory[T]) onPaymentAltered(payload *payment.PaymentPayload) (err erro
 	return nil
 }
 
+func (f *Factory[T]) onShippingAltered(payload *shipping.AlterPayload) (err error) {
+	if payload == nil {
+		hlog.Fix("hyper.f.onShippingAltered: payload is nil")
+		return nil
+	}
+	defer hlog.Elapse("hiorder.f.onShippingAltered",
+		hlog.F(zap.String("ord.id", payload.BizID)),
+		func() []zap.Field {
+			if err != nil {
+				return []zap.Field{zap.Error(err)}
+			}
+			return nil
+		})()
+	ordID := cast.ToUint64(payload.BizID)
+	ordM, err := hdb.Get[OrderM](hyperplt.DB(), "id = ?", ordID)
+	if err != nil {
+		return err
+	}
+	if ordM == nil {
+		hlog.Fix("hyper.f.onShippingAltered: order not found", zap.Uint64("id", ordID))
+		return nil
+	}
+
+	err = f.dealer.OnShippingAltered(&ShippingAltered[T]{
+		Order:      orderMto[T](ordM),
+		ShippingID: payload.ShippingID,
+		SrcStatus:  payload.Src,
+		DstStatus:  payload.Dst,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (f *Factory[T]) nextID() ID {
 	return f.idGenerator.NextUint64()
 }
@@ -280,10 +317,11 @@ func (f *Factory[T]) doStartup() (context.Context, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("---------------REGISTER FMQ HANDLE", f.Code()) //todo
-	//doRegFactoryMqHandle(fmt.Sprintf("HIORD_%s", f.Code()), f.onPaymentAltered)
-	payment.MqRegisterPaymentAlter(f.Code(), func(ctx context.Context, payload *payment.PaymentPayload) error {
+	payment.MqRegisterPaymentAlter(f.Code(), func(ctx context.Context, payload *payment.AlterPayload) error {
 		return f.onPaymentAltered(payload)
+	})
+	shipping.MqRegisterShippingAlter(f.Code(), func(ctx context.Context, payload *shipping.AlterPayload) error {
+		return f.onShippingAltered(payload)
 	})
 	return nil, nil
 }

@@ -136,6 +136,10 @@ func Prepared(
 	if err != nil {
 		return err
 	}
+
+	go func() {
+		mqPublishShippingAlter(shipM.ID, shipM.UniLink, shipM.Status, StatusPickedUp)
+	}()
 	return nil
 }
 
@@ -188,5 +192,9 @@ func Completed(
 	if err != nil {
 		return err
 	}
+
+	go func() {
+		mqPublishShippingAlter(shipM.ID, shipM.UniLink, shipM.Status, StatusDelivered)
+	}()
 	return nil
 }
