@@ -1,8 +1,7 @@
-package hiorder
+package shipping
 
 import (
 	"context"
-	"fmt"
 	"github.com/hootuu/helix/unicom/hmq/hmq"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
@@ -12,46 +11,46 @@ import (
 )
 
 const (
-	MqTopicOrderAlter = "HYPER_ORDER_ALTER"
+	MqTopicShippingAlter = "HYPER_SHIPPING_ALTER"
 )
 
 type AlterPayload struct {
-	OrderID ID     `json:"order_id"`
-	Code    string `json:"code"`
-	Src     Status `json:"src"`
-	Dst     Status `json:"dst"`
+	ShippingID ID     `json:"shipping_id"`
+	BizCode    string `json:"biz_code"`
+	BizID      string `json:"biz_id"`
+	Src        Status `json:"src"`
+	Dst        Status `json:"dst"`
 }
 
 type AlterHandle func(ctx context.Context, payload *AlterPayload) error
 
-func mqPublishOrderAlter(payload *AlterPayload) {
+func mqPublishShippingAlter(payload *AlterPayload) {
 	var err error
 	err = hretry.Must(func() error {
-		return hyperplt.MqPublish(MqTopicOrderAlter, hjson.MustToBytes(payload))
+		return hyperplt.MqPublish(MqTopicShippingAlter, hjson.MustToBytes(payload))
 	})
 	if err != nil {
-		hlog.Fix("hyper.order.notify", zap.Error(err),
-			zap.String("biz_code", payload.Code),
-			zap.Uint64("id", payload.OrderID),
+		hlog.Fix("hyper.shipping.notify", zap.Error(err),
+			zap.Uint64("sid", payload.ShippingID),
+			zap.String("biz_code", payload.BizCode),
+			zap.String("biz_id", payload.BizID),
 			zap.Int("src", int(payload.Src)),
 			zap.Int("dst", int(payload.Dst)))
 		return
 	}
-	return
 }
 
-func onMqOrderAlter(ctx context.Context, msg *hmq.Message) error {
-	fmt.Println("onMqOrderAlter: ", msg)
+func onMqShippingAlter(ctx context.Context, msg *hmq.Message) error {
 	if msg == nil {
-		hlog.TraceFix("hyper.order.notify", ctx, fmt.Errorf("msg is nil"))
+		hlog.Fix("hyper.shipping.notify: msg is nil")
 		return nil
 	}
 	payload := hjson.MustFromBytes[AlterPayload](msg.Payload)
 	if payload == nil {
-		hlog.TraceFix("hyper.order.notify", ctx, fmt.Errorf("payload is nil"))
+		hlog.Fix("hyper.shipping.notify: payload is nil")
 		return nil
 	}
-	err := onUniOrdAlter(ctx, payload)
+	err := onShippingAlter(ctx, payload)
 	if err != nil {
 		return err
 	}
@@ -60,10 +59,10 @@ func onMqOrderAlter(ctx context.Context, msg *hmq.Message) error {
 
 func doMqInit() error {
 	mqShippingConsumer := hyperplt.MQ().NewConsumer(
-		"hyper_order_mq",
-		MqTopicOrderAlter,
+		"hyper_shipping_mq",
+		MqTopicShippingAlter,
 		"HYPER",
-	).WithHandler(onMqOrderAlter)
+	).WithHandler(onMqShippingAlter)
 	err := hyperplt.MQ().RegisterConsumer(mqShippingConsumer)
 	if err != nil {
 		return err

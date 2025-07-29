@@ -5,8 +5,8 @@ import (
 	"github.com/hootuu/helix/storage/hmeili"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
-	"github.com/hootuu/hyper/hshipping/shipping"
 	"github.com/hootuu/hyper/hyperplt"
+	"github.com/hootuu/hyper/shipping"
 	"github.com/meilisearch/meilisearch-go"
 	"go.uber.org/zap"
 )
@@ -101,7 +101,6 @@ func (idx *TxOrdIndexer) GetShippingDigest(shippingID shipping.ID) (map[string]a
 		return nil, err
 	}
 	return map[string]any{
-		"uni_link": shipM.UniLink.MustToDict(),
-		"address":  shipM.Address,
+		"address": shipM.Address,
 	}, nil
 }

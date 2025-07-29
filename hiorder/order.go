@@ -3,15 +3,14 @@ package hiorder
 import (
 	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
-	"github.com/hootuu/hyle/data/ctrl"
-	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
-	"github.com/hootuu/hyle/data/tag"
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hypes/collar"
-	"github.com/hootuu/hyper/hpay/payment"
-	"github.com/hootuu/hyper/hshipping/shipping"
+	"github.com/hootuu/hyle/hypes/ex"
+	"github.com/hootuu/hyper/payment"
+	"github.com/hootuu/hyper/shipping"
 	"github.com/spf13/cast"
+	"strings"
 )
 
 type Order[T Matter] struct {
@@ -26,34 +25,27 @@ type Order[T Matter] struct {
 	ShippingID shipping.ID  `json:"shipping_id"`
 	Status     Status       `json:"status"`
 	ExStatus   ExStatus     `json:"ex_status"`
-	Ctrl       ctrl.Ctrl    `json:"ctrl"`
-	Tag        tag.Tag      `json:"tag"`
-	Meta       dict.Dict    `json:"meta"`
-	UniLink    collar.Link  `json:"uni_link"`
+	Ex         *ex.Ex       `json:"ex"`
 }
 
 func (ord *Order[T]) toModel() *OrderM {
 	m := &OrderM{
-		Template: hdb.Template{
-			Ctrl: ord.Ctrl,
-			Tag:  hjson.MustToBytes(ord.Tag),
-			Meta: hjson.MustToBytes(ord.Meta),
-		},
-		ID:        ord.ID,
-		Code:      ord.Code,
-		Title:     ord.Title,
-		Payer:     ord.Payer,
-		Payee:     ord.Payee,
-		Amount:    ord.Amount,
-		PaymentID: ord.PaymentID,
-		Status:    ord.Status,
-		ExStatus:  ord.ExStatus,
-		Matter:    hjson.MustToBytes(ord.Matter),
-		UniLink:   ord.UniLink,
+		Template:   hdb.TemplateFromEx(ord.Ex),
+		ID:         ord.ID,
+		Code:       ord.Code,
+		Title:      ord.Title,
+		Payer:      ord.Payer,
+		Payee:      ord.Payee,
+		Amount:     ord.Amount,
+		PaymentID:  ord.PaymentID,
+		ShippingID: ord.ShippingID,
+		Status:     ord.Status,
+		ExStatus:   ord.ExStatus,
+		Matter:     hjson.MustToBytes(ord.Matter),
 	}
 	return m
 }
 
 func (ord *Order[T]) BuildCollar() collar.Collar {
-	return collar.Build(fmt.Sprintf("HIORD_%s", ord.Code), cast.ToString(ord.ID))
+	return collar.Build(fmt.Sprintf("HIORD_%s", strings.ToUpper(ord.Code)), cast.ToString(ord.ID))
 }
