@@ -4,12 +4,15 @@ import (
 	"github.com/hootuu/helix/helix"
 )
 
+func init() {
+	RegisterJobExecutor(NewNineExecutor())
+	RegisterJobExecutor(NewThirdExecutor())
+}
+
 var gInitialized = false
 
 func Use() {
 	helix.MustInit("hyper_shipping", func() error {
-		RegisterJobExecutor(NewNineExecutor())
-		RegisterJobExecutor(NewThirdExecutor())
 		if err := doDbInit(); err != nil {
 			return err
 		}
