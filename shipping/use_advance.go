@@ -3,9 +3,9 @@ package shipping
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hlog"
-	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
@@ -13,14 +13,14 @@ import (
 
 func AdvPrepared(
 	ctx context.Context,
-	uniLink collar.Link,
+	id ID,
 	courierCode CourierCode,
 	trackingNo string,
 	_ ex.Meta,
 ) (err error) {
 	InitIfNeeded()
-	if uniLink == "" {
-		return errors.New("uni_link is required")
+	if id == 0 {
+		return errors.New("id is required")
 	}
 	if courierCode == "" {
 		return errors.New("courier_code is required")
@@ -29,32 +29,32 @@ func AdvPrepared(
 		return errors.New("tracking_no is required")
 	}
 	tx := hyperplt.Tx(ctx)
-	shipM, err := hdb.Get[ShipM](tx, "uni_link = ?", uniLink)
+	shipM, err := hdb.Get[ShipM](tx, "id = ?", id)
 	if err != nil {
 		return err
 	}
 	if shipM == nil {
-		return errors.New("uni_link not found: " + uniLink.Display())
+		return fmt.Errorf("id not found: %d", id)
 	}
 	return doAdvToSubmitted(ctx, shipM.ID, courierCode, trackingNo)
 }
 
 func AdvCompleted(
 	ctx context.Context,
-	uniLink collar.Link,
+	id ID,
 	_ ex.Meta,
 ) (err error) {
 	InitIfNeeded()
-	if uniLink == "" {
-		return errors.New("uni_link is required")
+	if id == 0 {
+		return errors.New("id is required")
 	}
 	if hlog.IsElapseComponent() {
 		defer hlog.ElapseWithCtx(ctx, "hyper.shipping.Completed",
-			hlog.F(zap.String("uni_link", uniLink.Str())),
+			hlog.F(zap.Uint64("id", id)),
 			func() []zap.Field {
 				if err != nil {
 					return []zap.Field{
-						zap.String("uni_link", uniLink.Display()),
+						zap.Uint64("id", id),
 						zap.Error(err)}
 				}
 				return nil
@@ -62,12 +62,12 @@ func AdvCompleted(
 		)()
 	}
 	tx := hyperplt.Tx(ctx)
-	shipM, err := hdb.Get[ShipM](tx, "uni_link = ?", uniLink)
+	shipM, err := hdb.Get[ShipM](tx, "id = ?", id)
 	if err != nil {
 		return err
 	}
 	if shipM == nil {
-		return errors.New("uni_link not found: " + uniLink.Display())
+		return fmt.Errorf("uni_link not found: %d", id)
 	}
 	return doAdvToCompleted(ctx, shipM.ID)
 }

@@ -34,6 +34,8 @@ func ttListenJobTimeout(ctx context.Context, job *Job) {
 	})
 }
 
+//todo use ticktock init
+
 func init() {
 	helix.Ready(func() {
 		hyperplt.Ticktock().RegisterJobHandlerFunc(
