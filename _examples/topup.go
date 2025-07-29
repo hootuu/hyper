@@ -72,7 +72,7 @@ func main() {
 			panic(err)
 		}
 
-		err = gTopup.TopUpPaymentCompleted(ctx, ord.ID)
+		err = gTopup.TopUpPaymentCompleted(ctx, ord.ID, "xxx")
 		if err != nil {
 			panic(err)
 		}

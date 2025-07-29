@@ -13,9 +13,7 @@ import (
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
-	"github.com/hootuu/hyper/hpay"
-	"github.com/hootuu/hyper/hpay/payment"
-	"github.com/hootuu/hyper/hpay/thirdjob"
+	"github.com/hootuu/hyper/payment"
 	"github.com/nineora/harmonic/chain"
 	"go.uber.org/zap"
 	"strings"
@@ -89,7 +87,7 @@ func (t *TopUp) TopUpCreate(ctx context.Context, paras TopUpParas) (*hiorder.Ord
 		Payer:  paras.Payer,
 		Payee:  collar.Build("NINEORA", t.mint).Link(),
 		Amount: paras.Amount,
-		Payment: []payment.JobDefine{&thirdjob.Job{
+		Payment: []payment.JobDefine{&payment.ThirdJob{
 			ThirdCode: paras.PayChannelCode,
 			Amount:    paras.Amount,
 			Ex: &ex.Ex{
@@ -99,9 +97,7 @@ func (t *TopUp) TopUpCreate(ctx context.Context, paras TopUpParas) (*hiorder.Ord
 			},
 		}},
 		Matter: Matter{InAccount: paras.InAccountAddr},
-		Ctrl:   paras.Ctrl,
-		Tag:    paras.Tag,
-		Meta:   paras.Meta,
+		Ex:     ex.EmptyEx(),
 	})
 	if err != nil {
 		return nil, err
@@ -129,11 +125,11 @@ func (t *TopUp) TopUpPaymentPrepared(ctx context.Context, ordID hiorder.ID) (err
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobPrepared(ctx, paymentID, 1)
+	err = payment.AdvJobToPrepared(ctx, paymentID, 1)
 	if err != nil {
 		return errors.New("job prepared: " + err.Error())
 	}
-	err = hpay.Advance(ctx, paymentID)
+	err = payment.AdvPrepared(ctx, paymentID)
 	if err != nil {
 		return errors.New("advance payment: " + err.Error())
 	}
@@ -156,7 +152,7 @@ func (t *TopUp) TopUpPaymentCompleted(ctx context.Context, ordID hiorder.ID, pay
 		return errors.New("load order fail: " + err.Error())
 	}
 	paymentID := eng.GetOrder().PaymentID
-	err = hpay.JobCompleted(ctx, paymentID, 1, payNumber)
+	err = payment.AdvJobToCompleted(ctx, paymentID, 1, payNumber)
 	if err != nil {
 		return errors.New("job completed: " + err.Error())
 	}
