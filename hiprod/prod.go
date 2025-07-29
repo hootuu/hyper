@@ -21,6 +21,7 @@ import (
 )
 
 type ProdCreateParas struct {
+	ID        prod.ID     `json:"id"`
 	Biz       prod.Biz    `json:"biz"`       //optional
 	Category  category.ID `json:"category"`  //optional
 	Brand     brand.ID    `json:"brand"`     //optional

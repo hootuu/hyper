@@ -11,6 +11,7 @@ import (
 )
 
 type Product struct {
+	ID        prod.ID     `json:"id"`
 	SkuID     prod.SkuID  `json:"sku_id"`
 	SpuID     prod.SpuID  `json:"spu_id"`
 	VwhID     vwh.ID      `json:"vwh_id"`
