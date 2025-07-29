@@ -13,7 +13,7 @@ func advToCanceled(
 	_ hfsm.Event,
 	data ...dict.Dict,
 ) (hfsm.State, error) {
-	paymentID := cast.ToUint64(data[0].Get("payment_id"))
+	paymentID := cast.ToUint64(data[0].Get("payment_id").String())
 	err := doSetStatus(ctx, paymentID, src, Canceled)
 	if err != nil {
 		return 0, err
