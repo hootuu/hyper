@@ -2,8 +2,8 @@ package hiprod
 
 import (
 	"fmt"
+	"github.com/hootuu/hyle/crypto/hmd5"
 	"github.com/hootuu/hyle/data/hjson"
-	"github.com/hootuu/hyle/data/idx"
 	"github.com/hootuu/hyle/hypes/media"
 	"github.com/hootuu/hyper/hiprod/prod"
 	"github.com/hootuu/hyper/hiprod/vwh"
@@ -30,7 +30,7 @@ func ProductMustGet(args ProductGetArgs) (*Product, error) {
 		return nil, fmt.Errorf("spu not found: %d", args.SkuID)
 	}
 	return &Product{
-		ID:        idx.New(),
+		ID:        hmd5.MD5(fmt.Sprintf("%d:%d:%d:%d", spuM.ID, skuM.ID, 0, 0)),
 		SkuID:     skuM.ID,
 		SpuID:     spuM.ID,
 		VwhID:     0,

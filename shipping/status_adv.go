@@ -104,7 +104,7 @@ func doSetStatus(
 	mut["status"] = targetStatus
 	switch targetStatus {
 	case Submitted:
-		mut["timeout_completed"] = gorm.Expr("CURRENT_TIMESTAMP")
+		mut["submitted_time"] = gorm.Expr("CURRENT_TIMESTAMP")
 	case Failed:
 		mut["failed_time"] = gorm.Expr("CURRENT_TIMESTAMP")
 	case Canceled:
