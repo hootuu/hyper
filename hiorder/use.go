@@ -19,3 +19,7 @@ func InitIfNeeded() {
 		Use()
 	}
 }
+
+func init() {
+	InitIfNeeded()
+}

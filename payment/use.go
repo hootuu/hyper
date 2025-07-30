@@ -7,6 +7,7 @@ import (
 func init() {
 	RegisterJobExecutor(NewNineExecutor())
 	RegisterJobExecutor(NewThirdExecutor())
+	InitIfNeeded()
 }
 
 var gInitialized = false
