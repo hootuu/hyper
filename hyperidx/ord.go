@@ -138,9 +138,9 @@ func (idx *TxOrdIndexer) GetPaymentDigest(paymentID payment.ID) (map[string]any,
 	return map[string]any{
 		"ctx":            jobM.Ctx,
 		"pay_no":         jobM.PayNo,
-		"prepared_time":  payM.PreparedTime,
-		"canceled_time":  payM.CanceledTime,
-		"timeout_time":   payM.TimeoutTime,
-		"completed_time": payM.CompletedTime,
+		"prepared_time":  jobM.PreparedTime,
+		"canceled_time":  jobM.CanceledTime,
+		"timeout_time":   jobM.TimeoutTime,
+		"completed_time": jobM.CompletedTime,
 	}, nil
 }
