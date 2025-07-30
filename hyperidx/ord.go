@@ -131,14 +131,13 @@ func (idx *TxOrdIndexer) GetShippingDigest(shippingID shipping.ID) (map[string]a
 }
 
 func (idx *TxOrdIndexer) GetPaymentDigest(paymentID payment.ID) (map[string]any, error) {
-	payM, err := hdb.MustGet[payment.JobM](hyperplt.DB(), "payment_id = ? AND payment_seq = ?", paymentID, 1)
+	jobM, err := hdb.MustGet[payment.JobM](hyperplt.DB(), "payment_id = ? AND payment_seq = ?", paymentID, 1)
 	if err != nil {
 		return nil, err
 	}
 	return map[string]any{
-		"status":         payM.Status,
-		"ctx":            payM.Ctx,
-		"pay_no":         payM.PayNo,
+		"ctx":            jobM.Ctx,
+		"pay_no":         jobM.PayNo,
 		"prepared_time":  payM.PreparedTime,
 		"canceled_time":  payM.CanceledTime,
 		"timeout_time":   payM.TimeoutTime,
