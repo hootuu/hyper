@@ -84,6 +84,7 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["amount"] = m.Amount
 	doc["status"] = m.Status
 	doc["matter"] = m.Matter
+	doc["meta"] = m.Meta
 	doc["payment_id"] = m.PaymentID
 	if m.PaymentID != 0 {
 		doc["payment"], err = idx.GetPaymentDigest(m.PaymentID)
