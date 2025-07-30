@@ -2,6 +2,7 @@ package hiorder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hootuu/hyle/hcoin"
 	"github.com/hootuu/hyle/hlog"
@@ -25,7 +26,19 @@ type CreateParas[T Matter] struct {
 }
 
 func (p *CreateParas[T]) Validate() error {
-	return nil // todo TODOTODO
+	if p.Idem == "" {
+		return errors.New("idem is required")
+	}
+	if p.Title == "" {
+		return errors.New("title is required")
+	}
+	if p.Payer == "" {
+		return errors.New("payer is required")
+	}
+	if p.Amount == 0 {
+		return errors.New("amount is required")
+	}
+	return nil
 }
 
 func (f *Factory[T]) New(ctx context.Context, paras *CreateParas[T]) (engine *Engine[T], err error) {
@@ -66,6 +79,7 @@ func (f *Factory[T]) New(ctx context.Context, paras *CreateParas[T]) (engine *En
 
 	if len(paras.Payment) > 0 {
 		paymentID, err := payment.Create(ctx, &payment.CreateParas{
+			Idem:    fmt.Sprintf("HYPER:ORD:PAY:%s:%d", f.Code(), ordID),
 			Payer:   paras.Payer,
 			Payee:   paras.Payee,
 			BizCode: f.Code(),
@@ -73,7 +87,11 @@ func (f *Factory[T]) New(ctx context.Context, paras *CreateParas[T]) (engine *En
 			Amount:  paras.Amount,
 			Ex:      paras.Ex,
 			Jobs:    paras.Payment,
+			Timeout: 0,
 		})
+		if err != nil {
+			return nil, err
+		}
 		err = payment.Prepare(ctx, paymentID)
 		if err != nil {
 			return nil, err

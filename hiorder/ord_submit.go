@@ -28,27 +28,15 @@ func (e *Engine[T]) advToInitial(
 
 func (e *Engine[T]) doAdvToInitial(
 	ctx context.Context,
-	orderID ID,
 ) (err error) {
 	ordM := e.ord.toModel()
 
 	tx := hyperplt.Tx(ctx)
 	err = hdb.Tx(tx, func(tx *gorm.DB) error {
-		innerCtx := hdb.TxCtx(tx)
-		err = e.deal.Before(innerCtx, e.ord.Status, Initial)
-		if err != nil {
-			hlog.Err("hyper.order.Submit: dealer.Before", zap.Error(err))
-			return err
-		}
 		ordM.Status = Initial
 		err = hdb.Create[OrderM](tx, ordM)
 		if err != nil {
 			hlog.Err("hyper.order.Submit: db.Create", zap.Error(err))
-			return err
-		}
-		err = e.deal.After(innerCtx, e.ord.Status, Initial)
-		if err != nil {
-			hlog.Err("hyper.order.Submit: dealer.After", zap.Error(err))
 			return err
 		}
 		return nil

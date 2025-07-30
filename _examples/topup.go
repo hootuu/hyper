@@ -8,12 +8,10 @@ import (
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/data/idx"
-	"github.com/hootuu/hyle/data/pagination"
 	"github.com/hootuu/hyle/data/tag"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hitopup"
-	"github.com/hootuu/hyper/hyperidx"
 	"github.com/nineora/lightv/_examples/tools"
 	"github.com/nineora/lightv/qing"
 	"github.com/spf13/cast"
@@ -53,6 +51,7 @@ func main() {
 		}
 
 		ord, err := gTopup.TopUpCreate(ctx, hitopup.TopUpParas{
+			Idem:           idx.New(),
 			Title:          "这是一笔充值" + cast.ToString(time.Now().UnixMilli()),
 			Payer:          collar.Build("user", uid).Link(),
 			InAccountAddr:  usrAccAddr,
@@ -77,17 +76,17 @@ func main() {
 			panic(err)
 		}
 
-		time.Sleep(10 * time.Second)
-		pageData, err := hyperidx.Filter(
-			hyperidx.OrdIndex,
-			"payer_id = '"+uid+"'",
-			[]string{"status:desc"},
-			pagination.PageNormal(),
-		)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(hjson.MustToString(pageData))
+		//time.Sleep(10 * time.Second)
+		//pageData, err := hyperidx.Filter(
+		//	hyperidx.OrdIndex,
+		//	"payer_id = '"+uid+"'",
+		//	[]string{"status:desc"},
+		//	pagination.PageNormal(),
+		//)
+		//if err != nil {
+		//	panic(err)
+		//}
+		//fmt.Println(hjson.MustToString(pageData))
 	})
 	helix.Startup()
 }

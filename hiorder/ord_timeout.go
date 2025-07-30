@@ -23,7 +23,6 @@ func (e *Engine[T]) advToTimeout(
 
 func (e *Engine[T]) doAdvToTimeout(
 	ctx context.Context,
-	orderID ID,
 ) (err error) {
-	return e.doAdvance(ctx, orderID, TimeoutEvent, nil)
+	return e.doAdvance(ctx, TimeoutEvent, nil)
 }

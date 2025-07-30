@@ -41,11 +41,12 @@ func mqPublishOrderAlter(payload *AlterPayload) {
 }
 
 func onMqOrderAlter(ctx context.Context, msg *hmq.Message) error {
-	fmt.Println("onMqOrderAlter: ", msg)
 	if msg == nil {
 		hlog.TraceFix("hyper.order.notify", ctx, fmt.Errorf("msg is nil"))
 		return nil
 	}
+	fmt.Println("onMqOrderAlter: ", string(msg.Payload))
+
 	payload := hjson.MustFromBytes[AlterPayload](msg.Payload)
 	if payload == nil {
 		hlog.TraceFix("hyper.order.notify", ctx, fmt.Errorf("payload is nil"))

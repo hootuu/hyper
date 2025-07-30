@@ -33,11 +33,11 @@ func (f *Factory[T]) onPaymentAlter(ctx context.Context, payload *payment.AlterP
 	}
 	switch payload.Dst {
 	case payment.Completed:
-		err = eng.doAdvToConsensus(ctx, ordID)
+		err = eng.doAdvToConsensus(ctx)
 	case payment.Timeout:
-		err = eng.doAdvToTimeout(ctx, ordID)
+		err = eng.doAdvToTimeout(ctx)
 	case payment.Canceled:
-		err = eng.doAdvToCanceled(ctx, ordID)
+		err = eng.doAdvToCanceled(ctx)
 	default:
 		return nil
 	}
