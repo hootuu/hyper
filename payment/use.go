@@ -7,7 +7,9 @@ import (
 func init() {
 	RegisterJobExecutor(NewNineExecutor())
 	RegisterJobExecutor(NewThirdExecutor())
-	InitIfNeeded()
+	helix.Ready(func() {
+		InitIfNeeded()
+	})
 }
 
 var gInitialized = false

@@ -26,5 +26,7 @@ func InitIfNeeded() {
 }
 
 func init() {
-	InitIfNeeded()
+	helix.Ready(func() {
+		InitIfNeeded()
+	})
 }
