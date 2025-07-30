@@ -23,7 +23,6 @@ func (e *Engine[T]) advToCompleted(
 
 func (e *Engine[T]) doAdvToCompleted(
 	ctx context.Context,
-	orderID ID,
 ) (err error) {
-	return e.doAdvance(ctx, orderID, CompleteEvent, nil)
+	return e.doAdvance(ctx, CompleteEvent, nil)
 }

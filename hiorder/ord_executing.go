@@ -23,7 +23,6 @@ func (e *Engine[T]) advToExecuting(
 
 func (e *Engine[T]) doAdvToExecuting(
 	ctx context.Context,
-	orderID ID,
 ) (err error) {
-	return e.doAdvance(ctx, orderID, ExecuteEvent, nil)
+	return e.doAdvance(ctx, ExecuteEvent, nil)
 }

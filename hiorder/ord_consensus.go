@@ -23,7 +23,6 @@ func (e *Engine[T]) advToConsensus(
 
 func (e *Engine[T]) doAdvToConsensus(
 	ctx context.Context,
-	orderID ID,
 ) (err error) {
-	return e.doAdvance(ctx, orderID, ConsenseEvent, nil)
+	return e.doAdvance(ctx, ConsenseEvent, nil)
 }

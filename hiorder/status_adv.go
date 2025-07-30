@@ -22,6 +22,7 @@ func (e *Engine[T]) mustFsm() *hfsm.Machine {
 			AddTransition(Initial, TimeoutEvent, e.advToTimeout).
 			AddTransition(Initial, CompleteEvent, e.advToCompleted).
 			AddTransition(Consensus, ExecuteEvent, e.advToExecuting).
+			AddTransition(Consensus, CompleteEvent, e.advToCompleted).
 			AddTransition(Executing, CompleteEvent, e.advToCompleted)
 	}
 	return e.fsm
@@ -29,10 +30,10 @@ func (e *Engine[T]) mustFsm() *hfsm.Machine {
 
 func (e *Engine[T]) doAdvance(
 	ctx context.Context,
-	id ID,
 	event hfsm.Event,
 	mutSet func(ordM *OrderM, mustMut map[string]any),
 ) (err error) {
+	id := e.ord.ID
 	if hlog.IsElapseFunction() {
 		defer hlog.ElapseWithCtx(ctx, "hyper.order.doAdvance",
 			hlog.F(zap.Uint64("id", id), zap.Int("event", int(event))),
@@ -103,13 +104,31 @@ func (e *Engine[T]) doSetStatus(
 		mut["timeout_time"] = gorm.Expr("CURRENT_TIMESTAMP")
 	default:
 	}
-	rows, err := hdb.UpdateX[OrderM](tx, mut, "id = ? AND status = ?", id, srcStatus)
+	err = hdb.Tx(tx, func(tx *gorm.DB) error {
+		innerCtx := hdb.TxCtx(tx, ctx)
+		err := e.deal.Before(innerCtx, srcStatus, targetStatus)
+		if err != nil {
+			return err
+		}
+		rows, err := hdb.UpdateX[OrderM](tx, mut, "id = ? AND status = ?", id, srcStatus)
+		if err != nil {
+			return err
+		}
+		if rows == 0 {
+			return fmt.Errorf("payment[id=%d, status=%d] not exist", id, srcStatus)
+		}
+		return nil
+	})
+
 	if err != nil {
 		return err
 	}
-	if rows == 0 {
-		return fmt.Errorf("payment[id=%d, status=%d] not exist", id, srcStatus)
+
+	err = e.deal.After(ctx, srcStatus, targetStatus)
+	if err != nil {
+		return err
 	}
+
 	mqPublishOrderAlter(&AlterPayload{
 		OrderID: e.ord.ID,
 		Code:    e.ord.Code,

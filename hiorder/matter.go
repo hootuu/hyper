@@ -1,3 +1,7 @@
 package hiorder
 
-type Matter = interface{}
+import "github.com/hootuu/hyle/hypes/ex"
+
+type Matter = interface {
+	GetDigest() ex.Meta
+}

@@ -23,7 +23,6 @@ func (e *Engine[T]) advToCanceled(
 
 func (e *Engine[T]) doAdvToCanceled(
 	ctx context.Context,
-	orderID ID,
 ) (err error) {
-	return e.doAdvance(ctx, orderID, CancelEvent, nil)
+	return e.doAdvance(ctx, CancelEvent, nil)
 }

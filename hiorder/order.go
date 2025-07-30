@@ -49,3 +49,16 @@ func (ord *Order[T]) toModel() *OrderM {
 func (ord *Order[T]) BuildCollar() collar.Collar {
 	return collar.Build(fmt.Sprintf("HIORD_%s", strings.ToUpper(ord.Code)), cast.ToString(ord.ID))
 }
+
+func (ord *Order[T]) GetDigest() ex.Meta {
+	return ex.Meta{
+		"code":        ord.Code,
+		"id":          ord.ID,
+		"payer":       ord.Payer,
+		"payee":       ord.Payee,
+		"amount":      ord.Amount,
+		"payment_id":  ord.PaymentID,
+		"shipping_id": ord.ShippingID,
+		"matter":      ord.Matter.GetDigest(),
+	}
+}

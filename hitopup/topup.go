@@ -49,6 +49,7 @@ func NewTopUp(code hiorder.Code, mint chain.Address, convert Convert) (*TopUp, e
 }
 
 type TopUpParas struct {
+	Idem           string        `json:"idem"`
 	Title          string        `json:"title"`
 	Payer          collar.Link   `json:"payer"`
 	Amount         hcoin.Amount  `json:"amount"`
@@ -83,6 +84,7 @@ func (t *TopUp) TopUpCreate(ctx context.Context, paras TopUpParas) (*hiorder.Ord
 		return nil, err
 	}
 	engine, err := t.factory.New(ctx, &hiorder.CreateParas[Matter]{
+		Idem:   paras.Idem,
 		Title:  paras.Title,
 		Payer:  paras.Payer,
 		Payee:  collar.Build("NINEORA", t.mint).Link(),
@@ -103,6 +105,10 @@ func (t *TopUp) TopUpCreate(ctx context.Context, paras TopUpParas) (*hiorder.Ord
 		return nil, err
 	}
 	err = engine.Submit(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = payment.Prepare(ctx, engine.GetOrder().PaymentID)
 	if err != nil {
 		return nil, err
 	}
@@ -128,10 +134,6 @@ func (t *TopUp) TopUpPaymentPrepared(ctx context.Context, ordID hiorder.ID) (err
 	err = payment.AdvJobToPrepared(ctx, paymentID, 1)
 	if err != nil {
 		return errors.New("job prepared: " + err.Error())
-	}
-	err = payment.AdvPrepared(ctx, paymentID)
-	if err != nil {
-		return errors.New("advance payment: " + err.Error())
 	}
 	return nil
 }
