@@ -15,7 +15,7 @@ func init() {
 var gInitialized = false
 
 func Use() {
-	helix.MustInit("hyper_shipping", func() error {
+	helix.MustInit("hyper_payment", func() error {
 		if err := doDbInit(); err != nil {
 			return err
 		}
