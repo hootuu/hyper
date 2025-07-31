@@ -75,6 +75,7 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 		return nil, err
 	}
 	doc := hmeili.NewMapDocument(m.ID, m.AutoID, m.UpdatedAt.UnixMilli())
+	doc["created_at"] = m.CreatedAt
 	doc["code"] = m.Code
 	doc["title"] = m.Title
 	if m.Payer != "" {
