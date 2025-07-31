@@ -16,7 +16,7 @@ import (
 
 const (
 	OrdIndex      = "hyper_order"
-	ordIdxVersion = "1_0_0"
+	ordIdxVersion = "1_0_1"
 )
 
 type TxOrdIndexer struct{}
