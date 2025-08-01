@@ -66,10 +66,10 @@ func (d *Deal) After(ctx context.Context, _ hiorder.Status, target hiorder.Statu
 			Link: d.ord.BuildCollar().Link(),
 		})
 		if err != nil {
-			hlog.Err("hitopup.deal.Alter", zap.Error(err))
+			hlog.TraceErr("hitopup.deal.Alter", ctx, err)
 			return err
 		}
-		hlog.Logger().Info("hitopup.deal.Alter: OK", zap.String("sig", string(sig)))
+		hlog.Logger().Info("hitopup.deal.Alter: OK", hlog.TraceInfo(ctx), zap.String("sig", string(sig)))
 	default:
 	}
 	return nil
