@@ -58,6 +58,7 @@ func (e *NineExecutor) Prepare(ctx context.Context, pay *Payment, job *Job) (syn
 	}
 
 	_, err = harmonic.Nineora().TokenLock(ctx, &nineapi.TxLockParas{
+		Idem:    fmt.Sprintf("LOCK:%s", job.JobID),
 		Account: localJob.Payer,
 		Amount:  localJob.Amount,
 		Biz:     pay.BizCode,
@@ -107,6 +108,7 @@ func (e *NineExecutor) Advance(ctx context.Context, pay *Payment, job *Job) (syn
 	err = hdb.Tx(hyperplt.Tx(ctx), func(tx *gorm.DB) error {
 		innerTx := hdb.TxCtx(tx, ctx)
 		unlockSign, err = harmonic.Nineora().TokenUnlock(innerTx, &nineapi.TxUnlockParas{
+			Idem:    fmt.Sprintf("UNLOCK:%s", job.JobID),
 			Account: localJob.Payer,
 			Amount:  localJob.Amount,
 			Biz:     pay.BizCode,
@@ -118,6 +120,7 @@ func (e *NineExecutor) Advance(ctx context.Context, pay *Payment, job *Job) (syn
 			return err
 		}
 		transSign, err = harmonic.Nineora().TokenTransfer(innerTx, &nineapi.TxTransferParas{
+			Idem:       fmt.Sprintf("TRANS:%s", job.JobID),
 			Sender:     localJob.Payer,
 			Recipient:  localJob.Payee,
 			Amount:     localJob.Amount,
