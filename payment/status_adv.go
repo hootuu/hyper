@@ -22,6 +22,7 @@ func init() {
 		AddTransition(Initialized, CancelEvent, advToCanceled).
 		AddTransition(Initialized, CompleteEvent, advToCompleted).
 		AddTransition(Initialized, TimeoutEvent, advToTimeout).
+		AddTransition(Prepared, PrepareEvent, advToPrepared).
 		AddTransition(Prepared, TimeoutEvent, advToTimeout).
 		AddTransition(Prepared, CancelEvent, advToCanceled).
 		AddTransition(Prepared, ExecuteEvent, advToCompleted).
@@ -33,6 +34,7 @@ func init() {
 		AddTransition(JobInitialized, JobPrepareEvent, advJobToPrepared).
 		AddTransition(JobInitialized, JobCancelEvent, advJobToCanceled).
 		AddTransition(JobInitialized, JobCompleteEvent, advJobToCompleted).
+		AddTransition(JobPrepared, JobPrepareEvent, advJobToPrepared).
 		AddTransition(JobPrepared, JobTimeoutEvent, advJobToTimeout).
 		AddTransition(JobPrepared, JobCompleteEvent, advJobToCompleted).
 		AddTransition(JobPrepared, JobCancelEvent, advJobToCanceled)
