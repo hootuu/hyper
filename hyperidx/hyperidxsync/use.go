@@ -1,30 +1,26 @@
-package hyperidx
+package hyperidxsync
 
 import (
-	"context"
 	"errors"
-	"github.com/hootuu/helix/helix"
 	"github.com/hootuu/helix/storage/hcanal"
 	"github.com/hootuu/helix/storage/hmeili"
 	"github.com/hootuu/hyle/hlog"
+	"github.com/hootuu/hyle/hsys"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hiprod/vwh"
+	"github.com/hootuu/hyper/hyperidx"
 	"github.com/hootuu/hyper/hyperidx/prodidx"
 	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
 	"gorm.io/gorm/schema"
 )
 
-func init() {
-	helix.Use(helix.BuildHelix("hyper_index", func() (context.Context, error) {
-		err := doInit()
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}, func(ctx context.Context) {
-
-	}))
+func Use() {
+	err := doInit()
+	if err != nil {
+		hsys.Error("init hyperidx syncer failed: " + err.Error())
+		hsys.Exit(err)
+	}
 }
 
 func doInit() error {
@@ -35,7 +31,7 @@ func doInit() error {
 	}
 	idxArr := []hmeili.Indexer{
 		&prodidx.TxVwhProdIndexer{},
-		&TxOrdIndexer{},
+		&hyperidx.TxOrdIndexer{},
 	}
 	for i, m := range mArr {
 		if len(idxArr) <= i {
@@ -48,7 +44,7 @@ func doInit() error {
 				zap.String("idx", idxArr[i].GetName()), zap.Error(err))
 			return err
 		}
-		hyperplt.Canal().RegisterAlterHandler(
+		canal().RegisterAlterHandler(
 			hcanal.NewIndexHandler(
 				m.TableName(),
 				idxArr[i],
