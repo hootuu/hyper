@@ -15,7 +15,11 @@ func advToSubmitted(
 	data ...dict.Dict,
 ) (hfsm.State, error) {
 	shippingID := cast.ToUint64(data[0].Get("shipping_id").String())
-	err := doSetStatus(ctx, shippingID, Submitted, src, nil)
+	var sd dict.Dict
+	if len(data) > 1 {
+		sd = data[1]
+	}
+	err := doSetStatus(ctx, shippingID, Submitted, src, sd)
 	if err != nil {
 		return 0, err
 	}

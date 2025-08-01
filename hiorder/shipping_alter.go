@@ -32,6 +32,8 @@ func (f *Factory[T]) onShippingAlter(ctx context.Context, payload *shipping.Alte
 		return nil
 	}
 	switch payload.Dst {
+	case shipping.Submitted:
+		err = eng.doAdvToExecuting(ctx)
 	case shipping.Completed:
 		err = eng.doAdvToCompleted(ctx)
 	case shipping.Canceled:

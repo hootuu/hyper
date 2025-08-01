@@ -20,6 +20,8 @@ func init() {
 	gPaymentFSM = hfsm.NewMachine().
 		AddTransition(Initialized, PrepareEvent, advToPrepared).
 		AddTransition(Initialized, CancelEvent, advToCanceled).
+		AddTransition(Initialized, CompleteEvent, advToCompleted).
+		AddTransition(Initialized, TimeoutEvent, advToTimeout).
 		AddTransition(Prepared, TimeoutEvent, advToTimeout).
 		AddTransition(Prepared, CancelEvent, advToCanceled).
 		AddTransition(Prepared, ExecuteEvent, advToCompleted).
@@ -30,6 +32,7 @@ func init() {
 	gJobFSM = hfsm.NewMachine().
 		AddTransition(JobInitialized, JobPrepareEvent, advJobToPrepared).
 		AddTransition(JobInitialized, JobCancelEvent, advJobToCanceled).
+		AddTransition(JobInitialized, JobCompleteEvent, advJobToCompleted).
 		AddTransition(JobPrepared, JobTimeoutEvent, advJobToTimeout).
 		AddTransition(JobPrepared, JobCompleteEvent, advJobToCompleted).
 		AddTransition(JobPrepared, JobCancelEvent, advJobToCanceled)
