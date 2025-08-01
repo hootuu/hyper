@@ -2,6 +2,7 @@ package hitopup
 
 import (
 	"context"
+	"fmt"
 	"github.com/hootuu/hyle/data/ctrl"
 	"github.com/hootuu/hyle/data/tag"
 	"github.com/hootuu/hyle/hlog"
@@ -51,6 +52,7 @@ func (d *Deal) After(ctx context.Context, _ hiorder.Status, target hiorder.Statu
 	case hiorder.Completed:
 		nine := harmonic.Nineora()
 		sig, err := nine.TokenMint(ctx, &nineapi.TxMintParas{
+			Idem:       fmt.Sprintf("%s:%d", d.Code(), d.ord.ID),
 			Mint:       d.topup.mint,
 			Recipient:  d.ord.Matter.InAccount,
 			Amount:     d.ord.Amount,
