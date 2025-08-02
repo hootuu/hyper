@@ -41,7 +41,7 @@ func onPayJobPrepared(ctx context.Context, jobM *JobM) (err error) {
 	lstPayAutoID := int64(0)
 	preparedJobCount := 0
 	err = hdb.Iter[JobM](func() *gorm.DB {
-		return tx.Where("payment_id = ? AND auto_id > ?", jobM.PaymentID, lstPayAutoID)
+		return tx.Order("auto_id asc").Where("payment_id = ? AND auto_id > ?", jobM.PaymentID, lstPayAutoID)
 	}, func(m *JobM) error {
 		switch m.Status {
 		case JobPrepared, JobCompleted:
@@ -105,7 +105,7 @@ func onPayJobCompleted(ctx context.Context, jobM *JobM) (err error) {
 	lstPayAutoID := int64(0)
 	completedJobCount := 0
 	err = hdb.Iter[JobM](func() *gorm.DB {
-		return tx.Where("payment_id = ? AND auto_id > ?", jobM.PaymentID, lstPayAutoID)
+		return tx.Order("auto_id asc").Where("payment_id = ? AND auto_id > ?", jobM.PaymentID, lstPayAutoID)
 	}, func(m *JobM) error {
 		switch m.Status {
 		case JobCompleted:

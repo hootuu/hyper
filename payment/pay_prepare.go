@@ -55,7 +55,7 @@ func doPrepare(ctx context.Context, payID ID) (err error) {
 	lstPayAutoID := int64(0)
 	var jobArrM []*JobM
 	err = hdb.Iter[JobM](func() *gorm.DB {
-		return tx.Where("payment_id = ? AND auto_id > ?", payID, lstPayAutoID)
+		return tx.Order("auto_id asc").Where("payment_id = ? AND auto_id > ?", payID, lstPayAutoID)
 	}, func(m *JobM) error {
 		jobArrM = append(jobArrM, m)
 		lstPayAutoID = m.AutoID
