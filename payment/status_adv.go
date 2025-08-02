@@ -77,7 +77,7 @@ func doJobAdvance(ctx context.Context, jobID JobID, event hfsm.Event, data dict.
 	if jobM == nil {
 		hlog.TraceFix("payment.doJobAdvance: no such job", ctx, errors.New("no such job"),
 			zap.String("job_id", jobID))
-		return nil
+		return fmt.Errorf("no such job: %s", jobID)
 	}
 	if data == nil {
 		data = dict.NewDict()

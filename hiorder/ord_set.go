@@ -106,5 +106,6 @@ func (e *Engine[T]) SetPayment(ctx context.Context, paras *SetPaymentParas) (pay
 		hlog.Err("Tx err", hlog.TraceInfo(ctx), zap.Error(err))
 		return 0, errors.New("Tx Failed: " + err.Error())
 	}
+	e.ord.PaymentID = paymentID
 	return paymentID, nil
 }
