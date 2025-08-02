@@ -2,6 +2,7 @@ package hyperplt
 
 import (
 	"github.com/hootuu/helix/components/zplt"
+	"github.com/hootuu/helix/helix"
 	"github.com/hootuu/helix/unicom/hmq/hmq"
 )
 
@@ -12,7 +13,9 @@ func MQ() *hmq.MQ {
 var gMQ *hmq.MQ
 
 func init() {
-	gMQ = zplt.HelixMQ()
+	helix.AfterStartup(func() {
+		gMQ = zplt.HelixMQ()
+	})
 }
 
 func MqPublish(topic hmq.Topic, payload hmq.Payload) error {
