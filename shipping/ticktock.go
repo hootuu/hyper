@@ -24,7 +24,7 @@ func ttListenShippingTimeout(ctx context.Context, shippingID ID, timeout time.Du
 	hretry.Universal(func() error {
 		err := hyperplt.Postman().Send(ctx, &ticktock.DelayJob{
 			Type:      ttShippingTimeout,
-			ID:        fmt.Sprintf("hyper_shipping:%d", shippingID),
+			ID:        fmt.Sprintf("HYPER:SHIPPING:TIMEOUT:%d", shippingID),
 			Payload:   []byte(fmt.Sprintf("%d", shippingID)),
 			UniqueTTL: 0,
 			Delay:     timeout,

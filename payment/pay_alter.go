@@ -25,10 +25,6 @@ func onPaymentAlter(ctx context.Context, payload *AlterPayload) error {
 	}
 	handle, ok := gPaymentHandlerMap[payload.BizCode]
 	if !ok {
-		fmt.Println("gPaymentHandlerMap.len ", len(gPaymentHandlerMap))
-		for s, _ := range gPaymentHandlerMap {
-			fmt.Println("handle is ", s)
-		}
 		hlog.TraceFix("hyper.payment.notify",
 			ctx, fmt.Errorf("no handler for bizcode %s", payload.BizCode),
 			zap.Any("handles", gPaymentHandlerMap),

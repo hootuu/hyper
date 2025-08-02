@@ -2,6 +2,7 @@ package payment
 
 import (
 	"context"
+	"fmt"
 	"github.com/hootuu/helix/helix"
 	"github.com/hootuu/helix/ticktock"
 	"github.com/hootuu/hyle/hlog"
@@ -21,7 +22,7 @@ func ttListenJobTimeout(ctx context.Context, job *Job) {
 	hretry.Universal(func() error {
 		err := hyperplt.Postman().Send(ctx, &ticktock.DelayJob{
 			Type:      ttPaymentJobTimeout,
-			ID:        job.JobID,
+			ID:        fmt.Sprintf("HYPER:PAYMENT:TIMEOUT:%s", job.JobID),
 			Payload:   []byte(job.JobID),
 			UniqueTTL: 0,
 			Delay:     job.Timeout,
