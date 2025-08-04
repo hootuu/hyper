@@ -22,7 +22,7 @@ func NxtPaymentID() ID {
 		gPaymentIdGenerator, err = hnid.NewGenerator("hyper_payment_id",
 			hnid.NewOptions(1, 8).
 				SetTimestamp(hnid.Second, false).
-				SetAutoInc(5, 1, 99999, 1000),
+				SetAutoInc(4, 1, 9999, 100),
 		)
 		if err != nil {
 			hlog.Fix("hpay.ider.PaymentIdGenerator", zap.Error(err))
