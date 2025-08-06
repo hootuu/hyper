@@ -26,6 +26,7 @@ type OrderM struct {
 	Status        hfsm.State     `gorm:"column:status;not null;"`
 	ExStatus      hfsm.State     `gorm:"column:ex_status;not null;"`
 	Matter        datatypes.JSON `gorm:"column:matter;type:jsonb;"`
+	Link          collar.Link    `gorm:"column:link;index;size:128;"`
 	ConsensusTime *time.Time     `gorm:"column:consensus_time;"`
 	ExecutingTime *time.Time     `gorm:"column:executing_time;"`
 	CanceledTime  *time.Time     `gorm:"column:canceled_time;"`
@@ -47,6 +48,7 @@ func orderMto[T Matter](m *OrderM) *Order[T] {
 		Amount:     m.Amount,
 		PaymentID:  m.PaymentID,
 		ShippingID: m.ShippingID,
+		Link:       m.Link,
 		Status:     m.Status,
 		ExStatus:   m.ExStatus,
 		Ex:         ex.WithBytes(m.Ctrl, m.Tag, m.Meta),

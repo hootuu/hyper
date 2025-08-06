@@ -22,6 +22,7 @@ type CreateParas[T Matter] struct {
 	Amount  hcoin.Amount        `json:"amount"`
 	Payment []payment.JobDefine `json:"payment"`
 	Matter  T                   `json:"matter"`
+	Link    collar.Link         `json:"link"`
 	Ex      *ex.Ex              `json:"ex"`
 }
 
@@ -72,6 +73,7 @@ func (f *Factory[T]) New(ctx context.Context, paras *CreateParas[T]) (engine *En
 		Payee:     paras.Payee,
 		Matter:    paras.Matter,
 		Amount:    paras.Amount,
+		Link:      paras.Link,
 		PaymentID: 0,
 		Status:    Draft,
 		Ex:        paras.Ex,

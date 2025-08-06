@@ -20,6 +20,7 @@ type Order[T Matter] struct {
 	Payer      collar.Link  `json:"payer"`
 	Payee      collar.Link  `json:"payee"`
 	Matter     T            `json:"matter"`
+	Link       collar.Link  `json:"link"`
 	Amount     hcoin.Amount `json:"amount"`
 	PaymentID  payment.ID   `json:"payment_id"`
 	ShippingID shipping.ID  `json:"shipping_id"`
