@@ -35,6 +35,7 @@ func (ord *Order[T]) toModel() *OrderM {
 		ID:         ord.ID,
 		Code:       ord.Code,
 		Title:      ord.Title,
+		Link:       ord.Link,
 		Payer:      ord.Payer,
 		Payee:      ord.Payee,
 		Amount:     ord.Amount,
