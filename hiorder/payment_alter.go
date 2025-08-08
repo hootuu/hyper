@@ -49,7 +49,7 @@ func (f *Factory[T]) onPaymentAlter(ctx context.Context, payload *payment.AlterP
 	case payment.Completed:
 		err = eng.doAdvToConsensus(ctx)
 	case payment.Timeout:
-		err = eng.doAdvToTimeout(ctx)
+		err = eng.DoAdvToTimeout(ctx)
 	case payment.Canceled:
 		err = eng.doAdvToCanceled(ctx)
 	default:

@@ -21,7 +21,7 @@ func (e *Engine[T]) advToTimeout(
 	return Timeout, nil
 }
 
-func (e *Engine[T]) doAdvToTimeout(
+func (e *Engine[T]) DoAdvToTimeout(
 	ctx context.Context,
 ) (err error) {
 	return e.doAdvance(ctx, TimeoutEvent, nil)
