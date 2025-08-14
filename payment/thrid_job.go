@@ -20,9 +20,9 @@ func (j *ThirdJob) Validate() error {
 	if j.ThirdCode == "" {
 		return errors.New("require third_code")
 	}
-	if j.Amount == 0 {
-		return errors.New("require amount")
-	}
+	//if j.Amount == 0 {
+	//	return errors.New("require amount")
+	//}
 	return nil
 }
 
