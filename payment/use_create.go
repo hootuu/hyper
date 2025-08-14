@@ -43,9 +43,9 @@ func (paras *CreateParas) Validate() error {
 	if paras.Payee == "" {
 		return errors.New("payee is required")
 	}
-	if paras.Amount == 0 {
-		return errors.New("amount is required")
-	}
+	//if paras.Amount == 0 {
+	//	return errors.New("amount is required")
+	//}
 	if len(paras.Jobs) == 0 {
 		return errors.New("jobs is required")
 	}
