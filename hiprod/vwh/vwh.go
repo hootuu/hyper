@@ -173,3 +173,47 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 	}
 	return nil
 }
+
+func DeductInventory(ctx context.Context, vwhID ID, skuID prod.SkuID, pwhID pwh.ID, quantity uint64) error {
+	tx := hyperplt.Tx(ctx)
+	vwhSkuM, err := hdb.MustGet[VirtualWhSkuM](tx, "vwh = ? AND sku = ? AND pwh = ?", vwhID, skuID, pwhID)
+	if err != nil {
+		return err
+	}
+	if vwhSkuM.Inventory < quantity {
+		return fmt.Errorf("not enough inventory: %d < %d", vwhSkuM.Inventory, quantity)
+	}
+	mut := map[string]any{
+		"inventory": gorm.Expr("inventory - ?", quantity),
+		"version":   gorm.Expr("version + 1"),
+	}
+	err = hdb.Update[VirtualWhSkuM](tx, mut, "vwh = ? AND sku = ? AND pwh = ?",
+		vwhID, skuID, pwhID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddInventory(ctx context.Context, vwhID ID, skuID prod.SkuID, pwhID pwh.ID, quantity uint64) error {
+	tx := hyperplt.Tx(ctx)
+	vwhSkuM, err := hdb.MustGet[VirtualWhSkuM](tx, "vwh = ? AND sku = ? AND pwh = ?", vwhID, skuID, pwhID)
+	if err != nil {
+		return err
+	}
+
+	if vwhSkuM == nil {
+		return fmt.Errorf("vwh sku not found: vwh=%d, sku=%d, pwh=%d", vwhID, skuID, pwhID)
+	}
+	
+	mut := map[string]any{
+		"inventory": gorm.Expr("inventory + ?", quantity),
+		"version":   gorm.Expr("version + 1"),
+	}
+	err = hdb.Update[VirtualWhSkuM](tx, mut, "vwh = ? AND sku = ? AND pwh = ?",
+		vwhID, skuID, pwhID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

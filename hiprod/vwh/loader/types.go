@@ -1,8 +1,8 @@
 package loader
 
 import (
+	"github.com/hootuu/hyper/hiprod/pwh"
 	"github.com/hootuu/hyper/sku"
-	"github.com/hootuu/hyper/warehouse/pwh"
 )
 
 type Next byte

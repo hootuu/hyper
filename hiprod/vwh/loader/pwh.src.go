@@ -1,6 +1,6 @@
 package loader
 
-import "github.com/hootuu/hyper/warehouse/vwh/strategy"
+import "github.com/hootuu/hyper/hiprod/vwh/strategy"
 
 type PwhSrcLoader struct {
 	pricing   *strategy.Pricing
