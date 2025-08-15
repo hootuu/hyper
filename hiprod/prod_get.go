@@ -29,7 +29,7 @@ func ProductMustGet(args ProductGetArgs) (*Product, error) {
 	if spuM == nil {
 		return nil, fmt.Errorf("spu not found: %d", args.SkuID)
 	}
-	vwhSrc, err := vwh.DbSkuVwhGetBySku(skuM.ID)
+	vwhSku, err := vwh.DbSkuVwhGetBySku(skuM.ID)
 	if err != nil {
 		return nil, fmt.Errorf("vwh get error: %v", err)
 	}
@@ -37,15 +37,15 @@ func ProductMustGet(args ProductGetArgs) (*Product, error) {
 		ID:        hmd5.MD5(fmt.Sprintf("%d:%d:%d:%d", spuM.ID, skuM.ID, 0, 0)),
 		SkuID:     skuM.ID,
 		SpuID:     spuM.ID,
-		VwhID:     vwhSrc.Vwh,
-		PwhID:     vwhSrc.Pwh,
+		VwhID:     vwhSku.Vwh,
+		PwhID:     vwhSku.Pwh,
 		Biz:       spuM.Biz,
 		Category:  spuM.Category,
 		Name:      spuM.Name,
 		Intro:     spuM.Intro,
 		Brand:     spuM.Brand,
 		Media:     *hjson.MustFromBytes[media.Dict](spuM.Media),
-		Price:     0, //todo
-		Inventory: vwhSrc.Inventory,
+		Price:     vwhSku.Price,
+		Inventory: vwhSku.Inventory,
 	}, err
 }
