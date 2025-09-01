@@ -29,7 +29,6 @@ func (idx *TxVwhProdIndexer) GetVersion() string {
 func (idx *TxVwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 	filterableAttributes := []string{
 		"auto_id",
-		"id",
 		"sku_id",
 		"spu_id",
 		"vwh_id",
@@ -83,7 +82,7 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 		return nil, err
 	}
 	//pwhSkuM, err := hdb.MustGet[pwh.PhysicalSkuM](hyperplt.DB(),
-	//	"pwh = ? AND sku = ?", vwhSkuM)
+	//	"pwh = ? AND sku = ?", vwhSkuM.Pwh, vwhSkuM.Sku)
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -97,10 +96,12 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	}
 
 	doc := hmeili.NewMapDocument(vwhSkuM.AutoID, vwhSkuM.AutoID, vwhSkuM.UpdatedAt.UnixMilli())
+	doc["auto_id"] = vwhSkuM.AutoID
 	doc["vwh_id"] = vwhSkuM.Vwh
 	doc["sku_id"] = vwhSkuM.Sku
 	doc["pwh_id"] = vwhSkuM.Pwh
 	doc["price"] = vwhSkuM.Price
+	doc["use_inventory"] = vwhSkuM.UseInventory
 	doc["cur_stock"] = vwhSkuM.Inventory
 
 	doc["spu_id"] = spuM.ID
@@ -113,7 +114,6 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["cost_price"] = spuM.Cost
 	doc["spu_status"] = spuM.Available
 	doc["created_at"] = spuM.CreatedAt.Unix()
-	//doc["sku_stock"] = pwhSkuM.Available
 
 	doc["media"] = spuM.Media
 	doc["ctrl"] = spuM.Ctrl

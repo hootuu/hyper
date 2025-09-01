@@ -3,9 +3,11 @@ package prodord
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
+	"time"
 )
 
 type CreateParas struct {
@@ -52,6 +54,7 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 		Payee:   paras.Payee,
 		Amount:  paras.Amount,
 		Payment: nil,
+		Link:    collar.Build(f.core.Code(), fmt.Sprintf("%s_%d", paras.Payer.MustToID(), time.Now().Unix())).Link(),
 		Matter: Matter{
 			Items:  paras.Items,
 			Amount: paras.Amount,

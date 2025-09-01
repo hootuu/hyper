@@ -29,7 +29,6 @@ func (idx *TxPwhProdIndexer) GetVersion() string {
 func (idx *TxPwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 	filterableAttributes := []string{
 		"auto_id",
-		"id",
 		"sku_id",
 		"spu_id",
 		"pwh_id",
@@ -49,7 +48,6 @@ func (idx *TxPwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 	sortableAttributes := []string{
 		"auto_id",
 		"created_at",
-		"sort",
 	}
 	_, err = index.UpdateSortableAttributes(&sortableAttributes)
 	if err != nil {
@@ -83,6 +81,7 @@ func (idx *TxPwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	}
 
 	doc := hmeili.NewMapDocument(pwhSkuM.AutoID, pwhSkuM.AutoID, pwhSkuM.UpdatedAt.UnixMilli())
+	doc["auto_id"] = pwhSkuM.AutoID
 	doc["sku_id"] = pwhSkuM.SKU
 	doc["pwh_id"] = pwhSkuM.PWH
 
