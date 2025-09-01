@@ -1,4 +1,4 @@
-package prodord
+package supplyord
 
 import (
 	"fmt"
@@ -30,7 +30,6 @@ func (m *Item) Validate() error {
 type Matter struct {
 	Items  []*Item `json:"items"`
 	Amount uint64  `json:"amount"`
-	Count  uint64  `json:"count"`
 }
 
 func (m Matter) GetDigest() ex.Meta {

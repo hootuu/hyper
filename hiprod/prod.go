@@ -3,7 +3,6 @@ package hiprod
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/ctrl"
 	"github.com/hootuu/hyle/data/dict"
@@ -239,79 +238,4 @@ func SetAvailable(ctx context.Context, spuID prod.SpuID, available bool) (err er
 		"available": available,
 	}, "id = ?", spuID)
 	return err
-}
-
-type SkuUnpPublishParas struct {
-	Vwh  vwh.ID     `json:"vwh"`
-	Sku  prod.SkuID `json:"sku"`
-	Pwh  pwh.ID     `json:"pwh"`
-	Meta dict.Dict  `json:"meta"`
-}
-
-func (p SkuUnpPublishParas) Validate() error {
-	if p.Vwh == 0 {
-		return fmt.Errorf("require vwh")
-	}
-	if p.Pwh == 0 {
-		return fmt.Errorf("require pwh")
-	}
-	if p.Sku == 0 {
-		return fmt.Errorf("require sku")
-	}
-	return nil
-}
-
-func SkuUnpPublish(ctx context.Context, paras SkuUnpPublishParas) error {
-	err := paras.Validate()
-	if err != nil {
-		return err
-	}
-	tx := hyperplt.Tx(ctx)
-	vwhSkuM, err := hdb.Get[vwh.VirtualWhSkuM](tx, "vwh = ? AND sku = ? AND pwh = ?",
-		paras.Vwh, paras.Sku, paras.Pwh)
-	if err != nil {
-		return err
-	}
-	if vwhSkuM == nil {
-		return fmt.Errorf("vwh sku not found: vwh=%d, sku=%d, pwh=%d", paras.Vwh, paras.Sku, paras.Pwh)
-	}
-	vwhSkuExtM, err := hdb.Get[vwh.VirtualWhSkuExtM](tx, "pwh = ? AND link = ?", paras.Pwh, vwh.BuildVwhExtLink(paras.Vwh, paras.Sku))
-	if err != nil {
-		return err
-	}
-
-	err = hdb.Tx(tx, func(innerTx *gorm.DB) error {
-		quantity := vwhSkuM.Inventory
-		if quantity > 0 {
-			err = pwh.Unlock(hdb.TxCtx(innerTx), pwh.LockUnlockParas{
-				PwhID:    paras.Pwh,
-				SkuID:    paras.Sku,
-				Quantity: quantity,
-				Meta:     paras.Meta,
-			})
-			if err != nil {
-				return err
-			}
-		}
-		err = hdb.Update[vwh.VirtualWhSkuM](innerTx, map[string]any{
-			"inventory": 0,
-			"version":   gorm.Expr("version + 1"),
-		}, "auto_id = ?", vwhSkuM.AutoID)
-		if err != nil {
-			return err
-		}
-		if vwhSkuExtM != nil {
-			err = hdb.Update[vwh.VirtualWhSkuExtM](innerTx, map[string]any{
-				"available": false,
-			}, "auto_id = ?", vwhSkuExtM.AutoID)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }

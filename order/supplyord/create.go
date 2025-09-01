@@ -1,4 +1,4 @@
-package prodord
+package supplyord
 
 import (
 	"context"
@@ -58,7 +58,6 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 		Matter: Matter{
 			Items:  paras.Items,
 			Amount: paras.Amount,
-			Count:  paras.Count,
 		},
 		Ex: paras.Ex,
 	})

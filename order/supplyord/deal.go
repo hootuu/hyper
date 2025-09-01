@@ -1,4 +1,4 @@
-package prodord
+package supplyord
 
 import (
 	"context"
