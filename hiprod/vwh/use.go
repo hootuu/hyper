@@ -12,6 +12,7 @@ func init() {
 			&VirtualWhM{},
 			&VirtualWhSrcM{},
 			&VirtualWhSkuM{},
+			&VirtualWhSkuExtM{},
 		)
 		if err != nil {
 			return nil, err

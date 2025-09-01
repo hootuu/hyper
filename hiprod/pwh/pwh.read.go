@@ -28,3 +28,11 @@ func MustExist(ctx context.Context, id ID) error {
 	}
 	return nil
 }
+
+func GetByLink(link collar.ID) ID {
+	get, err := hdb.MustGet[PhysicalWhM](hyperplt.DB(), "link = ?", link)
+	if err != nil {
+		return 0
+	}
+	return get.ID
+}

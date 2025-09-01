@@ -7,6 +7,8 @@ import (
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hsys"
 	"github.com/hootuu/hyper/hiorder"
+	"github.com/hootuu/hyper/hiprod/prod"
+	"github.com/hootuu/hyper/hiprod/pwh"
 	"github.com/hootuu/hyper/hiprod/vwh"
 	"github.com/hootuu/hyper/hyperidx"
 	"github.com/hootuu/hyper/hyperidx/prodidx"
@@ -28,10 +30,14 @@ func doInit() error {
 	mArr := []schema.Tabler{
 		&vwh.VirtualWhSkuM{},
 		&hiorder.OrderM{},
+		&pwh.PhysicalSkuM{},
+		&prod.SpuM{},
 	}
 	idxArr := []hmeili.Indexer{
 		&prodidx.TxVwhProdIndexer{},
 		&hyperidx.TxOrdIndexer{},
+		&prodidx.TxPwhProdIndexer{},
+		&prodidx.TxSpuIndexer{},
 	}
 	for i, m := range mArr {
 		if len(idxArr) <= i {

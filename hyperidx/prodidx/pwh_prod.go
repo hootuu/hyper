@@ -6,32 +6,31 @@ import (
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiprod/prod"
 	"github.com/hootuu/hyper/hiprod/pwh"
-	"github.com/hootuu/hyper/hiprod/vwh"
 	"github.com/hootuu/hyper/hyperplt"
 	"github.com/meilisearch/meilisearch-go"
 	"go.uber.org/zap"
-	"time"
 )
 
 const (
-	SpuIndex      = "hyper_spu"
-	spuIdxVersion = "1_0_1"
+	PwhProdIndex      = "hyper_pwh_prod"
+	PwhProdIdxVersion = "1_0_1"
 )
 
-type TxSpuIndexer struct{}
+type TxPwhProdIndexer struct{}
 
-func (idx *TxSpuIndexer) GetName() string {
-	return SpuIndex
+func (idx *TxPwhProdIndexer) GetName() string {
+	return PwhProdIndex
 }
 
-func (idx *TxSpuIndexer) GetVersion() string {
-	return spuIdxVersion
+func (idx *TxPwhProdIndexer) GetVersion() string {
+	return PwhProdIdxVersion
 }
 
-func (idx *TxSpuIndexer) Setting(index meilisearch.IndexManager) error {
+func (idx *TxPwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 	filterableAttributes := []string{
 		"auto_id",
 		"id",
+		"sku_id",
 		"spu_id",
 		"pwh_id",
 		"biz",
@@ -50,6 +49,7 @@ func (idx *TxSpuIndexer) Setting(index meilisearch.IndexManager) error {
 	sortableAttributes := []string{
 		"auto_id",
 		"created_at",
+		"sort",
 	}
 	_, err = index.UpdateSortableAttributes(&sortableAttributes)
 	if err != nil {
@@ -68,18 +68,24 @@ func (idx *TxSpuIndexer) Setting(index meilisearch.IndexManager) error {
 	return nil
 }
 
-func (idx *TxSpuIndexer) Load(autoID int64) (hmeili.Document, error) {
-	spuM, err := hdb.MustGet[prod.SpuM](hyperplt.DB(), "auto_id = ?", autoID)
+func (idx *TxPwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
+	pwhSkuM, err := hdb.MustGet[pwh.PhysicalSkuM](hyperplt.DB(), "auto_id = ?", autoID)
 	if err != nil {
 		return nil, err
 	}
-	skuM, err := hdb.MustGet[prod.SkuM](hyperplt.DB(), "id = ?", spuM.ID)
+	skuM, err := hdb.MustGet[prod.SkuM](hyperplt.DB(), "id = ?", pwhSkuM.SKU)
+	if err != nil {
+		return nil, err
+	}
+	spuM, err := hdb.MustGet[prod.SpuM](hyperplt.DB(), "id = ?", skuM.Spu)
 	if err != nil {
 		return nil, err
 	}
 
-	doc := hmeili.NewMapDocument(spuM.AutoID, spuM.AutoID, spuM.UpdatedAt.UnixMilli())
-	doc["sku_id"] = skuM.ID
+	doc := hmeili.NewMapDocument(pwhSkuM.AutoID, pwhSkuM.AutoID, pwhSkuM.UpdatedAt.UnixMilli())
+	doc["sku_id"] = pwhSkuM.SKU
+	doc["pwh_id"] = pwhSkuM.PWH
+
 	doc["spu_id"] = spuM.ID
 	doc["biz"] = spuM.Biz
 	doc["category"] = spuM.Category
@@ -90,23 +96,13 @@ func (idx *TxSpuIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["cost_price"] = spuM.Cost
 	doc["spu_status"] = spuM.Available
 	doc["created_at"] = spuM.CreatedAt.Unix()
+	doc["sku_stock"] = pwhSkuM.Available
+	doc["lock_stock"] = pwhSkuM.Locked
 
 	doc["media"] = spuM.Media
 	doc["ctrl"] = spuM.Ctrl
 	doc["tag"] = spuM.Tag
 	doc["meta"] = spuM.Meta
-
-	// fix  触发 index更新 同步spu最新数据
-	go func(skuID uint64) {
-		tx := hyperplt.DB()
-		now := time.Now()
-		_ = hdb.Update[vwh.VirtualWhSkuM](tx, map[string]interface{}{
-			"updated_at": now,
-		}, "sku = ?", skuID)
-		_ = hdb.Update[pwh.PhysicalSkuM](tx, map[string]interface{}{
-			"updated_at": now,
-		}, "sku = ?", skuID)
-	}(skuM.ID)
 
 	return doc, nil
 }

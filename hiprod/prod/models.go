@@ -9,14 +9,17 @@ import (
 
 type SpuM struct {
 	hdb.Template
-	Biz      Biz            `gorm:"column:biz;index;size:16;"`
-	ID       SpuID          `gorm:"column:id;primaryKey;autoIncrement:false;"`
-	Category category.ID    `gorm:"column:category;index;autoIncrement:false;"`
-	Name     string         `gorm:"column:name;size:100;"`
-	Intro    string         `gorm:"column:intro;size:618;"`
-	Brand    brand.ID       `gorm:"column:brand;size:32;"`
-	Version  hdb.Version    `gorm:"column:version;"`
-	Media    datatypes.JSON `gorm:"column:media;type:jsonb;"` //media.Dict
+	Biz       Biz            `gorm:"column:biz;index;size:16;"`
+	ID        SpuID          `gorm:"column:id;primaryKey;autoIncrement:false;"`
+	Category  category.ID    `gorm:"column:category;index;autoIncrement:false;"`
+	Name      string         `gorm:"column:name;size:100;"`
+	Intro     string         `gorm:"column:intro;size:618;"`
+	Brand     brand.ID       `gorm:"column:brand;size:32;"`
+	Version   hdb.Version    `gorm:"column:version;"`
+	Media     datatypes.JSON `gorm:"column:media;type:jsonb;"` //media.Dict
+	Cost      uint64         `gorm:"column:cost;size:32;"`
+	Price     uint64         `gorm:"column:price;size:32;"`
+	Available bool           `gorm:"column:available;"`
 }
 
 func (m *SpuM) TableName() string {

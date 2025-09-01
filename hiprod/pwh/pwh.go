@@ -18,6 +18,7 @@ func CreatePwh(
 	ctx context.Context,
 	link collar.ID,
 	memo string,
+	ext dict.Dict,
 ) (ID, error) {
 	tx := hyperplt.Tx(ctx)
 	bExist, err := hdb.Exist[PhysicalWhM](tx, "link = ?", link)
@@ -29,6 +30,9 @@ func CreatePwh(
 		return 0, fmt.Errorf("exist pwh: %s", link)
 	}
 	pwhM := &PhysicalWhM{
+		Template: hdb.Template{
+			Meta: hjson.MustToBytes(ext),
+		},
 		ID:   nextID(),
 		Link: link,
 		Memo: memo,
