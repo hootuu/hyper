@@ -186,22 +186,25 @@ func CreateProductByPwh(ctx context.Context, paras *ProdCreateParas) (skuID prod
 }
 
 type ProdUpdateParas struct {
-	SpuID prod.SpuID `json:"spu_id"`
-	Price uint64     `json:"price"`
-	Cost  uint64     `json:"cost"`
+	SpuID    prod.SpuID  `json:"spu_id"`
+	Price    uint64      `json:"price"`
+	Cost     uint64      `json:"cost"`
+	Category category.ID `json:"category"`
+	Brand    uint64      `json:"brand"`
+	Name     string      `json:"name"  `
+	Intro    string      `json:"intro"`
+	Spec     string      `json:"spec"`
+	Medias   media.Dict  `json:"medias"`
 }
 
 func (p *ProdUpdateParas) validate() error {
 	if p.SpuID == 0 {
 		return errors.New("require SpuID")
 	}
-	if p.Price == 0 && p.Cost == 0 {
-		return errors.New("require Price or Cost")
-	}
 	return nil
 }
 
-func UpdateProductPrice(ctx context.Context, paras *ProdUpdateParas) (err error) {
+func UpdateProductInfo(ctx context.Context, paras *ProdUpdateParas) (err error) {
 	if paras == nil {
 		return errors.New("paras is required")
 	}
@@ -225,17 +228,47 @@ func UpdateProductPrice(ctx context.Context, paras *ProdUpdateParas) (err error)
 	if paras.Cost > 0 {
 		updateM["cost"] = paras.Cost
 	}
+	if paras.Category > 0 {
+		updateM["category"] = paras.Category
+	}
+	if paras.Brand > 0 {
+		updateM["brand"] = paras.Brand
+	}
+	if paras.Name != "" {
+		updateM["name"] = paras.Name
+	}
+	if paras.Intro != "" {
+		updateM["intro"] = paras.Intro
+	}
+	if paras.Spec != "" {
+		meta := map[string]interface{}{
+			"spec": paras.Spec,
+		}
+		updateM["meta"] = hjson.MustToBytes(meta)
+	}
+	if len(paras.Medias) > 0 {
+		updateM["media"] = hjson.MustToBytes(paras.Medias)
+	}
 	err = hdb.Update[prod.SpuM](tx, updateM, "id = ?", paras.SpuID)
 	return err
 }
 
-func SetAvailable(ctx context.Context, spuID prod.SpuID, available bool) (err error) {
-	if spuID == 0 {
-		return errors.New("require spuID")
+func SetAvailable(ctx context.Context, spuIDs []prod.SpuID, available bool) (err error) {
+	if spuIDs == nil {
+		return errors.New("require spuIDs")
 	}
 	tx := hyperplt.Tx(ctx)
 	err = hdb.Update[prod.SpuM](tx, map[string]interface{}{
 		"available": available,
-	}, "id = ?", spuID)
+	}, "id in ?", spuIDs)
+	return err
+}
+
+func DeleteGoods(ctx context.Context, spuIDs []prod.SpuID) (err error) {
+	if spuIDs == nil {
+		return errors.New("require spuIDs")
+	}
+	tx := hyperplt.Tx(ctx)
+	err = hdb.Delete[prod.SpuM](tx, "id in ?", spuIDs)
 	return err
 }

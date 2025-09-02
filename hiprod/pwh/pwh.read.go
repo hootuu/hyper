@@ -41,3 +41,7 @@ func GetByLink(link collar.ID) ID {
 	}
 	return get.ID
 }
+
+func MustGetById(Id ID) (*PhysicalWhM, error) {
+	return hdb.MustGet[PhysicalWhM](hyperplt.DB(), "id = ?", Id)
+}
