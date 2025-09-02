@@ -149,7 +149,7 @@ func db(ctx context.Context) *gorm.DB {
 	return tx
 }
 
-func UpdateChannel(ctx context.Context, ch *Channel) error {
+func Update(ctx context.Context, ch *Channel) error {
 	if ch == nil || ch.ID == 0 {
 		return fmt.Errorf("require valid channel id")
 	}
@@ -172,10 +172,8 @@ func UpdateChannel(ctx context.Context, ch *Channel) error {
 	if ch.Icon != "" {
 		updateFields["icon"] = ch.Icon
 	}
-	if ch.Available {
-		updateFields["available"] = true
-	} else if !chnM.Available {
-		updateFields["available"] = false
+	if ch.Available != chnM.Available {
+		updateFields["available"] = ch.Available
 	}
 
 	if len(updateFields) == 0 {
@@ -192,7 +190,7 @@ func List(ctx context.Context, biz collar.Collar, available *bool) ([]*Channel, 
 	tx := db(ctx)
 
 	var arrM []*ChnM
-	query := tx.Where("biz = ?", biz)
+	query := tx.Where("biz = ?", biz.ToSafeID())
 	if available != nil {
 		query = query.Where("available = ?", *available)
 	}
