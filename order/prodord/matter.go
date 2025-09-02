@@ -8,7 +8,7 @@ import (
 )
 
 type Item struct {
-	ProdID   prod.ID    `json:"id"`
+	SpuID    prod.SpuID `json:"spu_id"`
 	SkuID    prod.SkuID `json:"sku_id"`
 	VwhID    vwh.ID     `json:"vwh_id"`
 	PwhID    vwh.ID     `json:"pwh_id"`

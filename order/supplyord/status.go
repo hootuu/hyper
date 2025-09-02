@@ -3,8 +3,7 @@ package supplyord
 import "github.com/hootuu/hyper/hiorder"
 
 const (
-	Initial  = hiorder.Initial
-	Paying   = hiorder.Consensus
-	Shipping = hiorder.Executing
-	Timeout  = hiorder.Timeout
+	Paying    = hiorder.Consensus
+	Shipping  = hiorder.Executing
+	Completed = hiorder.Completed
 )

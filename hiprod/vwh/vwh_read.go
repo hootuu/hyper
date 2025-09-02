@@ -5,7 +5,12 @@ import (
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hiprod/prod"
 	"github.com/hootuu/hyper/hyperplt"
+	"github.com/spf13/cast"
 )
+
+func BuildCollar(vwhID ID) collar.Collar {
+	return collar.Build("VWH", cast.ToString(vwhID))
+}
 
 func DbVwhGet(id ID) (*VirtualWhM, error) {
 	return hdb.Get[VirtualWhM](hyperplt.DB(), "id = ?", id)

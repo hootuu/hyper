@@ -3,11 +3,13 @@ package supplyord
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
-	"time"
+	"github.com/hootuu/hyper/hiprod/prod"
+	"github.com/hootuu/hyper/hyperplt"
+	"gorm.io/gorm"
 )
 
 type CreateParas struct {
@@ -16,6 +18,7 @@ type CreateParas struct {
 	Payer collar.Link `json:"payer"`
 	Payee collar.Link `json:"payee"`
 	Title string      `json:"title"`
+	Link  collar.Link `json:"link"`
 	Ex    *ex.Ex      `json:"ex"`
 }
 
@@ -35,11 +38,6 @@ func (paras *CreateParas) Validate() error {
 	if paras.Amount == 0 {
 		return errors.New("amount is empty")
 	}
-	for _, item := range paras.Items {
-		if err := item.Validate(); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -47,17 +45,56 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 	if err := paras.Validate(); err != nil {
 		return nil, err
 	}
+	var spuIds []uint64
+	for _, item := range paras.Items {
+		if err := item.Validate(); err != nil {
+			return nil, err
+		}
+		spuIds = append(spuIds, item.SpuID)
+	}
+
+	tx := hyperplt.DB()
+	list, err := hdb.Find[prod.SpuM](func() *gorm.DB {
+		return tx.Where("id in ?", spuIds)
+	})
+	if err != nil {
+		return nil, err
+	}
+	spuPriceMap := make(map[prod.SpuID]uint64)
+	for _, spu := range list {
+		spuPriceMap[spu.ID] = spu.Cost
+	}
+	var amount uint64
+	items := make([]*Item, 0)
+	for _, item := range paras.Items {
+		elems := &Item{
+			SpuID:    item.SpuID,
+			SkuID:    item.SkuID,
+			VwhID:    item.VwhID,
+			PwhID:    item.PwhID,
+			Price:    spuPriceMap[item.SpuID],
+			Quantity: item.Quantity,
+			Amount:   spuPriceMap[item.SpuID] * item.Quantity,
+		}
+		items = append(items, elems)
+		amount += elems.Amount
+	}
+
 	engine, err := f.core.New(ctx, &hiorder.CreateParas[Matter]{
-		Idem:    paras.Idem,
-		Title:   paras.Title,
-		Payer:   paras.Payer,
-		Payee:   paras.Payee,
-		Amount:  paras.Amount,
-		Payment: nil,
-		Link:    collar.Build(f.core.Code(), fmt.Sprintf("%s_%d", paras.Payer.MustToID(), time.Now().Unix())).Link(),
+		Idem:   paras.Idem,
+		Title:  paras.Title,
+		Payer:  paras.Payer,
+		Payee:  paras.Payee,
+		Amount: amount,
+		//Payment: []payment.JobDefine{&payment.ThirdJob{
+		//	ThirdCode: paras.PayChannelCode,
+		//	Amount:    paras.Amount,
+		//}},
+		Link: paras.Link,
 		Matter: Matter{
-			Items:  paras.Items,
-			Amount: paras.Amount,
+			Items:  items,
+			Amount: amount,
+			Count:  paras.Count,
 		},
 		Ex: paras.Ex,
 	})
@@ -69,7 +106,6 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 		return nil, err
 	}
 	order := engine.GetOrder()
-	go ttListenOrderTimeout(ctx, order.ID, 10*time.Minute)
 
 	return order, nil
 }

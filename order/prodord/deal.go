@@ -6,6 +6,7 @@ import (
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hiprod"
+	ordtypes "github.com/hootuu/hyper/order/types"
 	"go.uber.org/zap"
 )
 
@@ -49,7 +50,7 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 	go func() {
 		matter := d.ord.Matter
 
-		if target == Timeout {
+		if target == hiorder.Timeout {
 			for _, item := range matter.Items {
 				if item.VwhID == 0 || item.SkuID == 0 || item.Quantity == 0 {
 					hlog.TraceFix("OrdDeal.After: vwhID or skuID or quantity is zero, skip inventory return", ctx, nil)
@@ -65,8 +66,13 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 					hlog.TraceFix(fmt.Sprintf("OrdDeal.After: sku stock reset failed, vwhID: %d, skuID: %d", item.VwhID, item.SkuID), ctx, nil)
 				}
 			}
-		} else if target == Paying {
-
+		} else if target == hiorder.Consensus || target == hiorder.Executing || target == hiorder.Completed {
+			mqPublishOrderAlter(&ordtypes.AlterPayload{
+				OrderID: d.ord.ID,
+				Code:    d.dealer.code,
+				Src:     src,
+				Dst:     target,
+			})
 		}
 	}()
 	return nil

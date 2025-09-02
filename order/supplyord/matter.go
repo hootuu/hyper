@@ -8,7 +8,7 @@ import (
 )
 
 type Item struct {
-	ProdID   prod.ID    `json:"id"`
+	SpuID    prod.SpuID `json:"spu_id"`
 	SkuID    prod.SkuID `json:"sku_id"`
 	VwhID    vwh.ID     `json:"vwh_id"`
 	PwhID    vwh.ID     `json:"pwh_id"`
@@ -18,6 +18,9 @@ type Item struct {
 }
 
 func (m *Item) Validate() error {
+	if m.VwhID == 0 {
+		return fmt.Errorf("require Matter.VwhID")
+	}
 	if m.SkuID == 0 {
 		return fmt.Errorf("require Matter.SkuID")
 	}
@@ -30,6 +33,7 @@ func (m *Item) Validate() error {
 type Matter struct {
 	Items  []*Item `json:"items"`
 	Amount uint64  `json:"amount"`
+	Count  uint64  `json:"count"`
 }
 
 func (m Matter) GetDigest() ex.Meta {
