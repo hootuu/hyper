@@ -73,7 +73,7 @@ func (idx *TxSpuIndexer) Load(autoID int64) (hmeili.Document, error) {
 	if err != nil {
 		return nil, err
 	}
-	skuM, err := hdb.MustGet[prod.SkuM](hyperplt.DB(), "id = ?", spuM.ID)
+	skuM, err := hdb.MustGet[prod.SkuM](hyperplt.DB(), "spu = ?", spuM.ID)
 	if err != nil {
 		return nil, err
 	}
