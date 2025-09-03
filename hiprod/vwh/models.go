@@ -57,6 +57,7 @@ type VirtualWhSkuExtM struct {
 	Channel   uint64     `gorm:"column:channel;"`
 	Available bool       `gorm:"column:available;size:1;"`
 	Sort      uint64     `gorm:"column:sort;"`
+	Sales     uint64     `gorm:"column:sales;"`
 }
 
 func (m *VirtualWhSkuExtM) TableName() string {

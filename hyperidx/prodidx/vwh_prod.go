@@ -121,14 +121,16 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["meta"] = spuM.Meta
 
 	if vwhSkuExtM != nil {
+		doc["sku_ext"] = vwhSkuExtM.Meta
 		doc["channel"] = vwhSkuExtM.Channel
 		doc["available"] = vwhSkuExtM.Available
 		doc["sort"] = vwhSkuExtM.Sort
-		doc["sku_ext"] = vwhSkuExtM.Meta
+		doc["sales"] = vwhSkuExtM.Sales
 	} else {
 		doc["channel"] = 0
 		doc["available"] = false
 		doc["sort"] = 0
+		doc["sales"] = 0
 	}
 
 	return doc, nil
