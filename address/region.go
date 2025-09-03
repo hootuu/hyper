@@ -94,6 +94,11 @@ func regionSave(parentId htree.ID, r *maps.Region) (htree.ID, error) {
 
 func regionInit() error {
 	var err error
+	enable := hcfg.GetBool("hyper.address.amap.enable", false)
+	if !enable {
+		return nil
+	}
+
 	gRegionTree, err = htree.NewTree("hyper_addr_region", 8, []uint{3, 3, 3, 3, 3})
 	if err != nil {
 		return err

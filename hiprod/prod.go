@@ -186,15 +186,16 @@ func CreateProductByPwh(ctx context.Context, paras *ProdCreateParas) (skuID prod
 }
 
 type ProdUpdateParas struct {
-	SpuID    prod.SpuID  `json:"spu_id"`
-	Price    uint64      `json:"price"`
-	Cost     uint64      `json:"cost"`
-	Category category.ID `json:"category"`
-	Brand    uint64      `json:"brand"`
-	Name     string      `json:"name"  `
-	Intro    string      `json:"intro"`
-	Spec     string      `json:"spec"`
-	Medias   media.Dict  `json:"medias"`
+	SpuID     prod.SpuID  `json:"spu_id"`
+	Price     uint64      `json:"price"`
+	Cost      uint64      `json:"cost"`
+	Category  category.ID `json:"category"`
+	Brand     uint64      `json:"brand"`
+	Name      string      `json:"name"  `
+	Intro     string      `json:"intro"`
+	Spec      string      `json:"spec"`
+	Medias    media.Dict  `json:"medias"`
+	Available *bool       `json:"available"`
 }
 
 func (p *ProdUpdateParas) validate() error {
@@ -240,6 +241,9 @@ func UpdateProductInfo(ctx context.Context, paras *ProdUpdateParas) (err error) 
 	if paras.Intro != "" {
 		updateM["intro"] = paras.Intro
 	}
+	if paras.Available != nil {
+		updateM["available"] = *paras.Available
+	}
 	if paras.Spec != "" {
 		meta := map[string]interface{}{
 			"spec": paras.Spec,
@@ -264,11 +268,37 @@ func SetAvailable(ctx context.Context, spuIDs []prod.SpuID, available bool) (err
 	return err
 }
 
-func DeleteGoods(ctx context.Context, spuIDs []prod.SpuID) (err error) {
-	if spuIDs == nil {
-		return errors.New("require spuIDs")
+func DeleteGoods(ctx context.Context, spuID prod.SpuID) (err error) {
+	if spuID == 0 {
+		return errors.New("require spuID")
 	}
 	tx := hyperplt.Tx(ctx)
-	err = hdb.Delete[prod.SpuM](tx, "id in ?", spuIDs)
+	err = hdb.Tx(tx, func(innerTx *gorm.DB) error {
+		err = hdb.DeleteLogic[prod.SpuM](innerTx, "id = ?", spuID)
+		if err != nil {
+			return err
+		}
+		skuM, err := hdb.MustGet[prod.SkuM](innerTx, "spu = ?", spuID)
+		if err != nil {
+			return err
+		}
+		err = hdb.DeleteLogic[prod.SkuM](innerTx, "auto_id = ?", skuM.AutoID)
+		if err != nil {
+			return err
+		}
+		err = hdb.DeleteLogic[pwh.PhysicalSkuM](innerTx, "sku = ?", skuM.ID)
+		if err != nil {
+			return err
+		}
+		err = hdb.DeleteLogic[vwh.VirtualWhSkuM](innerTx, "sku = ?", skuM.ID)
+		if err != nil {
+			return err
+		}
+		err = hdb.DeleteLogic[vwh.VirtualWhSkuExtM](innerTx, "sku = ?", skuM.ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	return err
 }
