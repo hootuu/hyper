@@ -127,6 +127,7 @@ func SkuStockReset(ctx context.Context, paras SkuStockResetParas) error {
 			PwhID:    paras.Pwh,
 			SkuID:    paras.Sku,
 			Quantity: paras.Quantity,
+			Price:    vwhSkuM.Price,
 			Meta: map[string]interface{}{
 				"into_out_biz": "ORD_RESET",
 			},
