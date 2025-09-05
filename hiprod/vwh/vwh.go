@@ -3,6 +3,7 @@ package vwh
 import (
 	"context"
 	"fmt"
+
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
@@ -185,6 +186,10 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 		})
 		return err
 	}
+	_ = hdb.Update[VirtualWhSkuExtM](tx, map[string]any{
+		"available": true,
+	}, "vwh = ? AND sku = ? AND pwh = ?", paras.Vwh, paras.Sku, paras.Pwh)
+
 	mut := make(map[string]any)
 	if vwhSkuM.Price != paras.Price {
 		mut["price"] = paras.Price
