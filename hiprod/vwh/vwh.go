@@ -3,7 +3,6 @@ package vwh
 import (
 	"context"
 	"fmt"
-
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
@@ -317,16 +316,18 @@ func UpdateSkuExt(ctx context.Context, paras UpdateVwhSkuParas) error {
 	if paras.Channel > 0 {
 		mut["channel"] = paras.Channel
 	}
-	meta := *hjson.MustFromBytes[dict.Dict](vwhSkuExtM.Meta)
-	if len(paras.Meta) > 0 {
-		if len(meta) == 0 {
-			meta = paras.Meta
-		} else {
-			for k, v := range paras.Meta {
-				meta[k] = v
+	if vwhSkuExtM.Meta != nil {
+		meta := *hjson.MustFromBytes[dict.Dict](vwhSkuExtM.Meta)
+		if len(paras.Meta) > 0 {
+			if len(meta) == 0 {
+				meta = paras.Meta
+			} else {
+				for k, v := range paras.Meta {
+					meta[k] = v
+				}
 			}
+			mut["meta"] = hjson.MustToBytes(meta)
 		}
-		mut["meta"] = hjson.MustToBytes(meta)
 	}
 	if len(mut) == 0 {
 		return nil

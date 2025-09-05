@@ -2,13 +2,33 @@ package supplyord
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hyperplt"
 	"github.com/spf13/cast"
+	"time"
 )
+
+func DoOrderExecuting(ctx context.Context, orderID hiorder.ID) error {
+	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
+	if err != nil {
+		return err
+	}
+	if orderM.Status != hiorder.Consensus {
+		return errors.New("order status is incorrect")
+	}
+	err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
+		"status":         hiorder.Executing,
+		"executing_time": time.Now(),
+	}, "id = ?", orderID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func DoOrderExecutingAdv(ctx context.Context, orderID hiorder.ID) error {
 	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
