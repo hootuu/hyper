@@ -172,6 +172,9 @@ func CreateProductByPwh(ctx context.Context, paras *ProdCreateParas) (skuID prod
 			SkuID:    skuID,
 			Quantity: paras.Inventory,
 			Price:    paras.Cost,
+			Meta: map[string]interface{}{
+				"into_out_biz": "ADMIN_CREATE",
+			},
 		})
 		if err != nil {
 			return err
