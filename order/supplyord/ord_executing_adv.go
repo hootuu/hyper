@@ -10,13 +10,10 @@ import (
 	"github.com/spf13/cast"
 )
 
-func doOrderExecutingAdv(ctx context.Context, orderID hiorder.ID) error {
+func DoOrderExecutingAdv(ctx context.Context, orderID hiorder.ID) error {
 	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
 	if err != nil {
 		return err
-	}
-	if orderM == nil {
-		return nil
 	}
 	if orderM.Status == hiorder.Executing {
 		supOrder, err := GetByProdOrderID(ctx, orderID)
@@ -27,7 +24,7 @@ func doOrderExecutingAdv(ctx context.Context, orderID hiorder.ID) error {
 			hlog.TraceFix("hyper.supplyord.doOrderCompletedAdv", ctx, fmt.Errorf("supply order not found: %d", orderID))
 			return nil
 		}
-		err = hdb.Update[*hiorder.Order[Matter]](hyperplt.DB(), map[string]any{
+		err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
 			"status":         hiorder.Executing,
 			"executing_time": orderM.ExecutingTime,
 		}, "id = ?", supOrder.ID)

@@ -15,7 +15,7 @@ func callbackOrderCheckTimeoutAndAdv(ctx context.Context, orderID hiorder.ID) er
 		return nil
 	}
 	if orderM.Status == Initial {
-		e, err := NewFactory(orderM.Code).Core().Load(ctx, orderID)
+		e, err := GetFactory().Core().Load(ctx, orderID)
 		if err != nil {
 			return err
 		}

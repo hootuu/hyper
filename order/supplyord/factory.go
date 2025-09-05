@@ -25,6 +25,9 @@ var factory *Factory
 var once sync.Once
 
 func GetFactory() *Factory {
+	if factory != nil {
+		return factory
+	}
 	once.Do(func() {
 		factory = newFactory()
 	})

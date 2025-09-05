@@ -2,6 +2,7 @@ package supplyord
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/hjson"
@@ -9,15 +10,31 @@ import (
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/hootuu/hyper/hyperplt"
 	"github.com/spf13/cast"
+	"time"
 )
 
-func doOrderConsensusAdv(ctx context.Context, orderID hiorder.ID) error {
+func DoOrderConsensus(ctx context.Context, orderID hiorder.ID) error {
 	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
 	if err != nil {
 		return err
 	}
-	if orderM == nil {
-		return nil
+	if orderM.Status != hiorder.Initial {
+		return errors.New("order status is incorrect")
+	}
+	err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
+		"status":         hiorder.Consensus,
+		"consensus_time": time.Now(),
+	}, "id = ?", orderID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DoOrderConsensusAdv(ctx context.Context, orderID hiorder.ID) error {
+	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
+	if err != nil {
+		return err
 	}
 	if orderM.Status == hiorder.Consensus {
 		matter := *hjson.MustFromBytes[Matter](orderM.Matter)
@@ -36,7 +53,7 @@ func doOrderConsensusAdv(ctx context.Context, orderID hiorder.ID) error {
 		if err != nil {
 			return err
 		}
-		err = hdb.Update[*hiorder.Order[Matter]](hyperplt.DB(), map[string]any{
+		err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
 			"status":         hiorder.Consensus,
 			"consensus_time": orderM.ConsensusTime,
 			"payment_id":     orderM.PaymentID,
