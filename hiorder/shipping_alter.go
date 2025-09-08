@@ -37,7 +37,7 @@ func (f *Factory[T]) onShippingAlter(ctx context.Context, payload *shipping.Alte
 	case shipping.Completed:
 		err = eng.doAdvToCompleted(ctx)
 	case shipping.Canceled:
-		err = eng.doAdvToCanceled(ctx)
+		err = eng.doAdvToCanceled(ctx, nil)
 	default:
 		return nil
 	}

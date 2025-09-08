@@ -23,6 +23,7 @@ func (e *Engine[T]) advToCanceled(
 
 func (e *Engine[T]) doAdvToCanceled(
 	ctx context.Context,
+	mutSet func(ordM *OrderM, mustMut map[string]any),
 ) (err error) {
-	return e.doAdvance(ctx, CancelEvent, nil)
+	return e.doAdvance(ctx, CancelEvent, mutSet)
 }

@@ -51,7 +51,7 @@ func (f *Factory[T]) onPaymentAlter(ctx context.Context, payload *payment.AlterP
 	case payment.Timeout:
 		err = eng.DoAdvToTimeout(ctx)
 	case payment.Canceled:
-		err = eng.doAdvToCanceled(ctx)
+		err = eng.doAdvToCanceled(ctx, nil)
 	default:
 		return nil
 	}
