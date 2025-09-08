@@ -14,7 +14,11 @@ func (e *Engine[T]) advToCanceled(
 	data ...dict.Dict,
 ) (hfsm.State, error) {
 	orderID := cast.ToUint64(data[0].Get("order_id").String())
-	err := e.doSetStatus(ctx, orderID, Canceled, src, nil)
+	var mut dict.Dict
+	if len(data) > 0 {
+		mut = data[0]
+	}
+	err := e.doSetStatus(ctx, orderID, Canceled, src, mut)
 	if err != nil {
 		return 0, err
 	}
