@@ -59,7 +59,7 @@ func (e *Engine[T]) doAdvance(
 	if mutSet != nil {
 		mutSet(ordM, data)
 	}
-	_, err = e.mustFsm().Handle(ctx, ordM.Status, event, data)
+	_, err = e.mustFsm().Handle(ctx, ordM.Status, event, dict.NewDict().Set("order_id", id), data)
 	if err != nil {
 		return err
 	}
