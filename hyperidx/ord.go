@@ -3,6 +3,8 @@ package hyperidx
 import (
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/helix/storage/hmeili"
+	"github.com/hootuu/hyle/data/dict"
+	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hiorder"
@@ -52,7 +54,8 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"consensus_ts",
 		"tag",
 		"ctrl",
-		"created_at",
+		"created_at_ts",
+		"supplier_id",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -89,6 +92,7 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	}
 	doc := hmeili.NewMapDocument(m.ID, m.AutoID, m.UpdatedAt.UnixMilli())
 	doc["created_at"] = m.CreatedAt
+	doc["created_at_ts"] = m.CreatedAt.Unix()
 	doc["code"] = m.Code
 	doc["title"] = m.Title
 	if m.Payer != "" {
@@ -122,6 +126,16 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 			return nil, err
 		}
 	}
+	var supplierId string
+	meta := *hjson.MustFromBytes[dict.Dict](m.Meta)
+	if len(meta) > 0 {
+		supplierId = meta.Get("product.supplier_id").String()
+		if supplierId == "" {
+			supplierId = meta.Get("game.forge.supplier_id").String()
+		}
+	}
+	doc["supplier_id"] = supplierId
+
 	doc["tag"] = m.Tag
 	doc["ctrl"] = m.Ctrl
 	doc["meta"] = m.Meta
