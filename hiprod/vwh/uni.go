@@ -1,7 +1,6 @@
 package vwh
 
 import (
-	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/ctrl"
 	"github.com/hootuu/hyle/data/dict"
@@ -44,6 +43,5 @@ func initUni() error {
 		}
 	}
 	gUniVwhID = vwhM.ID
-	fmt.Println("==================>>>>>>>>>>>>>>>> VWH", gUniVwhID) //todo del
 	return nil
 }

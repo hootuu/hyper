@@ -2,26 +2,43 @@ package prodord
 
 import (
 	"context"
-	"github.com/hootuu/hyle/hcoin"
+	"errors"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
-	"github.com/hootuu/hyper/hiprod/prod"
+	"time"
 )
 
 type CreateParas struct {
-	Idem     string       `json:"idem"`
-	Title    string       `json:"title"`
-	ProdID   prod.ID      `json:"prod_id"`
-	Payer    collar.Link  `json:"payer"`
-	Payee    collar.Link  `json:"payee"`
-	Quantity uint32       `json:"quantity"`
-	Amount   hcoin.Amount `json:"amount"`
-	Ex       *ex.Ex       `json:"ex"`
+	Matter
+	Idem  string      `json:"idem"`
+	Payer collar.Link `json:"payer"`
+	Payee collar.Link `json:"payee"`
+	Title string      `json:"title"`
+	Ex    *ex.Ex      `json:"ex"`
 }
 
 func (paras *CreateParas) Validate() error {
-	//todo add validate
+	if paras.Idem == "" {
+		return errors.New("idem is empty")
+	}
+	if paras.Payer == "" {
+		return errors.New("player is empty")
+	}
+	if paras.Title == "" {
+		return errors.New("title is empty")
+	}
+	if len(paras.Items) == 0 {
+		return errors.New("items is empty")
+	}
+	if paras.Amount == 0 {
+		return errors.New("amount is empty")
+	}
+	for _, item := range paras.Items {
+		if err := item.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -36,8 +53,11 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 		Payee:   paras.Payee,
 		Amount:  paras.Amount,
 		Payment: nil,
+		Link:    collar.Build(f.core.Code(), paras.Payer.MustToID()).Link(),
 		Matter: Matter{
+			Items:  paras.Items,
 			Amount: paras.Amount,
+			Count:  paras.Count,
 		},
 		Ex: paras.Ex,
 	})
@@ -48,5 +68,8 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 	if err != nil {
 		return nil, err
 	}
-	return engine.GetOrder(), nil
+	order := engine.GetOrder()
+	go ttListenOrderTimeout(ctx, order.ID, 10*time.Minute)
+
+	return order, nil
 }

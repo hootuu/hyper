@@ -27,12 +27,13 @@ func Create(
 		return err
 	}
 	chnM := &ChnM{
-		Biz:    biz.ToSafeID(),
-		ID:     id,
-		Parent: gChannelIdTree.Root(),
-		Name:   name,
-		Icon:   icon,
-		Seq:    seq,
+		Biz:       biz.ToSafeID(),
+		ID:        id,
+		Parent:    gChannelIdTree.Root(),
+		Name:      name,
+		Icon:      icon,
+		Seq:       seq,
+		Available: false,
 	}
 	err = hdb.Create[ChnM](tx, chnM)
 	if err != nil {
@@ -91,7 +92,7 @@ func Add(
 	return nil
 }
 
-func Get(ctx context.Context, parent ID, deep int) ([]*Channel, error) {
+func Get(ctx context.Context, parent ID, deep int, biz collar.Collar) ([]*Channel, error) {
 	if deep < 1 || deep > gChannelIdTree.Factory().IdDeep() {
 		return nil, fmt.Errorf("invalid deep: %d", deep)
 	}
@@ -103,7 +104,7 @@ func Get(ctx context.Context, parent ID, deep int) ([]*Channel, error) {
 		return nil, err
 	}
 	var arr []*Channel
-	arr, err = loadChildren(ctx, minID, maxID, base)
+	arr, err = loadChildren(ctx, minID, maxID, base, biz)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func Get(ctx context.Context, parent ID, deep int) ([]*Channel, error) {
 		return arr, nil
 	}
 	for _, categ := range arr {
-		categ.Children, err = Get(ctx, categ.ID, newDeep)
+		categ.Children, err = Get(ctx, categ.ID, newDeep, biz)
 		if err != nil {
 			return nil, err
 		}
@@ -123,9 +124,9 @@ func Get(ctx context.Context, parent ID, deep int) ([]*Channel, error) {
 	return arr, nil
 }
 
-func loadChildren(ctx context.Context, minID htree.ID, maxID htree.ID, base htree.ID) ([]*Channel, error) {
+func loadChildren(ctx context.Context, minID htree.ID, maxID htree.ID, base htree.ID, biz collar.Collar) ([]*Channel, error) {
 	arrM, err := hdb.Find[ChnM](func() *gorm.DB {
-		return db(ctx).Where("id % ? = 0 AND id >= ? AND id <= ?", base, minID, maxID)
+		return db(ctx).Where("id % ? = 0 AND id >= ? AND id <= ? and biz = ?", base, minID, maxID, biz.ToSafeID())
 	})
 	if err != nil {
 		return []*Channel{}, err
@@ -146,4 +147,65 @@ func db(ctx context.Context) *gorm.DB {
 		tx = zplt.HelixPgDB().PG()
 	}
 	return tx
+}
+
+func Update(ctx context.Context, ch *Channel) error {
+	if ch == nil || ch.ID == 0 {
+		return fmt.Errorf("require valid channel id")
+	}
+
+	tx := db(ctx)
+
+	chnM, err := hdb.Get[ChnM](tx, "id = ?", ch.ID)
+	if err != nil {
+		return err
+	}
+	if chnM == nil {
+		return fmt.Errorf("channel not found")
+	}
+
+	updateFields := map[string]any{}
+
+	if ch.Name != "" {
+		updateFields["name"] = ch.Name
+	}
+	if ch.Icon != "" {
+		updateFields["icon"] = ch.Icon
+	}
+	if ch.Available != chnM.Available {
+		updateFields["available"] = ch.Available
+	}
+
+	if len(updateFields) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	if err := hdb.Update[ChnM](tx, updateFields, "id = ?", ch.ID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func List(ctx context.Context, biz collar.Collar, available *bool) ([]*Channel, error) {
+	tx := db(ctx)
+
+	var arrM []*ChnM
+	query := tx.Where("biz = ?", biz.ToSafeID())
+	if available != nil {
+		query = query.Where("available = ?", *available)
+	}
+
+	if err := query.Order("seq ASC").Find(&arrM).Error; err != nil {
+		return []*Channel{}, err
+	}
+
+	if len(arrM) == 0 {
+		return []*Channel{}, nil
+	}
+
+	var arr []*Channel
+	for _, item := range arrM {
+		arr = append(arr, item.ToChannel())
+	}
+	return arr, nil
 }

@@ -6,11 +6,13 @@ import (
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hiorder"
+	"github.com/hootuu/hyper/hiprod/pwh"
 	"github.com/hootuu/hyper/hyperplt"
 	"github.com/hootuu/hyper/payment"
 	"github.com/hootuu/hyper/shipping"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/nineora/harmonic/nineidx"
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 )
 
@@ -39,7 +41,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"payer_acc_code",
 		"payer_acc_id",
 		"payee_code",
-		"payee_id",
+		"payee",
 		"payee_acc_code",
 		"payee_acc_id",
 		"status",
@@ -47,6 +49,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"title",
 		"payment_id",
 		"shipping_id",
+		"consensus_ts",
 		"tag",
 		"ctrl",
 	}
@@ -66,6 +69,15 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		hlog.Err("hyper.idx.Setting: Error updating sortable attributes", zap.Error(err))
 		return err
 	}
+
+	searchableAttributes := []string{
+		"title",
+	}
+	_, err = index.UpdateSettings(hmeili.BuildSearchSettings(searchableAttributes))
+	if err != nil {
+		hlog.Err("hyper.spu.Setting: Error updating settings", zap.Error(err))
+		return err
+	}
 	return nil
 }
 
@@ -81,11 +93,16 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	if m.Payer != "" {
 		doc["payer"] = idx.GetPayerDigest(m.Payer)
 	}
-	doc["payee"] = m.Payee.MustToDict()
+	if m.Payee != "" {
+		doc["payee"] = idx.GetPayerDigest(m.Payee)
+	}
 	doc["amount"] = m.Amount
 	doc["status"] = m.Status
 	doc["matter"] = m.Matter
 	doc["consensus_time"] = m.ConsensusTime
+	if m.ConsensusTime != nil {
+		doc["consensus_ts"] = m.ConsensusTime.Unix()
+	}
 	doc["executing_time"] = m.ExecutingTime
 	doc["canceled_time"] = m.CanceledTime
 	doc["completed_time"] = m.CompletedTime
@@ -114,12 +131,20 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 
 func (idx *TxOrdIndexer) GetPayerDigest(payer collar.Link) map[string]any {
 	payerM := payer.MustToDict()
-	info := nineidx.FastGetSattva(payerM.ID)
-	return map[string]any{
+	data := map[string]any{
 		"code": payerM.Code,
 		"id":   payerM.ID,
-		"info": info,
 	}
+	if payerM.Code == "SATTVA" {
+		info := nineidx.FastGetSattva(payerM.ID)
+		data["info"] = info
+	} else if payerM.Code == "PWH" {
+		pwhInfo, _ := pwh.MustGetById(cast.ToUint64(payerM.ID))
+		if pwhInfo != nil {
+			data["name"] = pwhInfo.Memo
+		}
+	}
+	return data
 }
 
 func (idx *TxOrdIndexer) GetShippingDigest(shippingID shipping.ID) (map[string]any, error) {
