@@ -52,6 +52,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"consensus_ts",
 		"tag",
 		"ctrl",
+		"created_at",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
