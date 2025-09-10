@@ -20,10 +20,6 @@ func DbSkuVwhGetBySku(skuID prod.SkuID) (*VirtualWhSkuM, error) {
 	return hdb.Get[VirtualWhSkuM](hyperplt.DB(), "sku = ?", skuID)
 }
 
-func GetByLink(link collar.ID) ID {
-	get, err := hdb.MustGet[VirtualWhM](hyperplt.DB(), "link = ?", link)
-	if err != nil {
-		return 0
-	}
-	return get.ID
+func MustGetByLink(link collar.ID) (*VirtualWhM, error) {
+	return hdb.MustGet[VirtualWhM](hyperplt.DB(), "link = ?", link)
 }
