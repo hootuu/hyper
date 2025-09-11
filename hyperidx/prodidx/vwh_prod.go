@@ -13,7 +13,7 @@ import (
 
 const (
 	VwhProdIndex      = "hyper_prod"
-	vwhProdIdxVersion = "1_0_0"
+	vwhProdIdxVersion = "1_0_1"
 )
 
 type TxVwhProdIndexer struct{}
@@ -29,14 +29,18 @@ func (idx *TxVwhProdIndexer) GetVersion() string {
 func (idx *TxVwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 	filterableAttributes := []string{
 		"auto_id",
-		"id",
 		"sku_id",
 		"spu_id",
 		"vwh_id",
 		"pwh_id",
 		"biz",
+		"name",
 		"category",
 		"brand",
+		"spu_status",
+		"created_at",
+		"channel",
+		"available",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -46,12 +50,23 @@ func (idx *TxVwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 
 	sortableAttributes := []string{
 		"auto_id",
-		"timestamp",
+		"created_at",
 		"price",
+		"available",
+		"sort",
 	}
 	_, err = index.UpdateSortableAttributes(&sortableAttributes)
 	if err != nil {
 		hlog.Err("hyper.spu.Setting: Error updating sortable attributes", zap.Error(err))
+		return err
+	}
+
+	searchableAttributes := []string{
+		"name",
+	}
+	_, err = index.UpdateSettings(hmeili.BuildSearchSettings(searchableAttributes))
+	if err != nil {
+		hlog.Err("hyper.spu.Setting: Error updating settings", zap.Error(err))
 		return err
 	}
 	return nil
@@ -62,8 +77,15 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	if err != nil {
 		return nil, err
 	}
+	vwhSkuExtM, err := hdb.Get[vwh.VirtualWhSkuExtM](hyperplt.DB(), "vwh = ? AND sku = ? AND pwh = ?", vwhSkuM.Vwh, vwhSkuM.Sku, vwhSkuM.Pwh)
+	if err != nil {
+		return nil, err
+	}
 	//pwhSkuM, err := hdb.MustGet[pwh.PhysicalSkuM](hyperplt.DB(),
-	//	"pwh = ? AND sku = ?", vwhSkuM)
+	//	"pwh = ? AND sku = ?", vwhSkuM.Pwh, vwhSkuM.Sku)
+	//if err != nil {
+	//	return nil, err
+	//}
 	skuM, err := hdb.MustGet[prod.SkuM](hyperplt.DB(), "id = ?", vwhSkuM.Sku)
 	if err != nil {
 		return nil, err
@@ -74,11 +96,13 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	}
 
 	doc := hmeili.NewMapDocument(vwhSkuM.AutoID, vwhSkuM.AutoID, vwhSkuM.UpdatedAt.UnixMilli())
+	doc["auto_id"] = vwhSkuM.AutoID
 	doc["vwh_id"] = vwhSkuM.Vwh
 	doc["sku_id"] = vwhSkuM.Sku
 	doc["pwh_id"] = vwhSkuM.Pwh
 	doc["price"] = vwhSkuM.Price
-	doc["inventory"] = vwhSkuM.Inventory
+	doc["use_inventory"] = vwhSkuM.UseInventory
+	doc["cur_stock"] = vwhSkuM.Inventory
 
 	doc["spu_id"] = spuM.ID
 	doc["biz"] = spuM.Biz
@@ -86,11 +110,28 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["name"] = spuM.Name
 	doc["intro"] = spuM.Intro
 	doc["brand"] = spuM.Brand
+	doc["base_price"] = spuM.Price
+	doc["cost_price"] = spuM.Cost
+	doc["spu_status"] = spuM.Available
+	doc["created_at"] = spuM.CreatedAt.Unix()
 
 	doc["media"] = spuM.Media
 	doc["ctrl"] = spuM.Ctrl
 	doc["tag"] = spuM.Tag
 	doc["meta"] = spuM.Meta
+
+	if vwhSkuExtM != nil {
+		doc["sku_ext"] = vwhSkuExtM.Meta
+		doc["channel"] = vwhSkuExtM.Channel
+		doc["available"] = vwhSkuExtM.Available
+		doc["sort"] = vwhSkuExtM.Sort
+		doc["sales"] = vwhSkuExtM.Sales
+	} else {
+		doc["channel"] = 0
+		doc["available"] = false
+		doc["sort"] = 0
+		doc["sales"] = 0
+	}
 
 	return doc, nil
 }

@@ -1,11 +1,11 @@
-package prodord
+package supplyord
 
 import (
 	"github.com/hootuu/hyper/hiorder"
 	"sync"
 )
 
-const Code = "PROD_ORDER"
+const Code = "SUPPLY_ORDER"
 
 type Factory struct {
 	core *hiorder.Factory[Matter]

@@ -1,4 +1,4 @@
-package prodord
+package supplyord
 
 import (
 	"fmt"
@@ -18,6 +18,9 @@ type Item struct {
 }
 
 func (m *Item) Validate() error {
+	if m.VwhID == 0 {
+		return fmt.Errorf("require Matter.VwhID")
+	}
 	if m.SkuID == 0 {
 		return fmt.Errorf("require Matter.SkuID")
 	}

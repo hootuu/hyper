@@ -19,10 +19,12 @@ func Collar(id ID) collar.Collar {
 const Root ID = 0
 
 type Channel struct {
-	ID       ID         `json:"id"`
-	Name     string     `json:"name"`
-	Icon     string     `json:"icon"`
-	Children []*Channel `json:"children"`
+	ID        ID         `json:"id"`
+	Name      string     `json:"name"`
+	Icon      string     `json:"icon"`
+	Seq       int        `json:"seq"`
+	Children  []*Channel `json:"children"`
+	Available bool       `gorm:"column:available"`
 }
 
 func (c *Channel) AddChild(child *Channel) *Channel {
