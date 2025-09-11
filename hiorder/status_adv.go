@@ -124,7 +124,13 @@ func (e *Engine[T]) doSetStatus(
 		return err
 	}
 
-	err = e.deal.After(ctx, srcStatus, targetStatus)
+	nf, err := e.f.Load(ctx, id)
+	if err != nil {
+		hlog.Err("hyper.order.doSetStatus: load", zap.Error(err))
+		return err
+	}
+
+	err = nf.deal.After(ctx, srcStatus, targetStatus)
 	if err != nil {
 		return err
 	}

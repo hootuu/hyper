@@ -3,6 +3,7 @@ package hiorder
 import (
 	"context"
 	"github.com/hootuu/hyle/hfsm"
+	"github.com/hootuu/hyle/hypes/ex"
 )
 
 type Engine[T Matter] struct {
@@ -23,6 +24,10 @@ func newEngine[T Matter](deal Deal[T], ord *Order[T], f *Factory[T]) *Engine[T] 
 
 func (e *Engine[T]) GetOrder() *Order[T] {
 	return e.ord
+}
+
+func (e *Engine[T]) GetDeal() Deal[T] {
+	return e.deal
 }
 
 func (e *Engine[T]) Submit(ctx context.Context) error {
