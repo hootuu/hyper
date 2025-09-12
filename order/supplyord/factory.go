@@ -2,7 +2,6 @@ package supplyord
 
 import (
 	"github.com/hootuu/hyper/hiorder"
-	"sync"
 )
 
 const Code = "SUPPLY_ORDER"
@@ -22,14 +21,11 @@ func (f *Factory) Core() *hiorder.Factory[Matter] {
 }
 
 var factory *Factory
-var once sync.Once
 
 func GetFactory() *Factory {
 	if factory != nil {
 		return factory
 	}
-	once.Do(func() {
-		factory = newFactory()
-	})
+	factory = newFactory()
 	return factory
 }
