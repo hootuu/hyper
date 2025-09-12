@@ -2,10 +2,14 @@ package hiorder
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/hlog"
+	"github.com/hootuu/hyper/hyperplt"
 	"github.com/hootuu/hyper/shipping"
 	"github.com/spf13/cast"
+	"time"
 )
 
 func (f *Factory[T]) onShippingAlter(ctx context.Context, payload *shipping.AlterPayload) error {
@@ -45,4 +49,26 @@ func (f *Factory[T]) onShippingAlter(ctx context.Context, payload *shipping.Alte
 		return err
 	}
 	return nil
+}
+
+func UpdateShipping(ctx context.Context, orderId, courierCode, trackingNo string) error {
+	if orderId == "" {
+		return errors.New("order_id is required")
+	}
+	if courierCode == "" {
+		return errors.New("courier_code is required")
+	}
+	if trackingNo == "" {
+		return errors.New("tracking_no is required")
+	}
+	err := hdb.Update[shipping.ShipM](hyperplt.Tx(ctx), map[string]any{
+		"courier_code": courierCode,
+		"tracking_no":  trackingNo,
+	}, "biz_id = ?", orderId)
+	if err != nil {
+		return err
+	}
+	return hdb.Update[OrderM](hyperplt.Tx(ctx), map[string]any{
+		"updated_at": time.Now(),
+	}, "id = ?", orderId)
 }
