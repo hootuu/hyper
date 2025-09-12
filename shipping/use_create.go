@@ -88,3 +88,19 @@ func Create(ctx context.Context, paras *CreateParas) (id ID, err error) {
 	}
 	return id, nil
 }
+
+func Update(ctx context.Context, orderId, courierCode, trackingNo string) error {
+	if orderId == "" {
+		return errors.New("order_id is required")
+	}
+	if courierCode == "" {
+		return errors.New("courier_code is required")
+	}
+	if trackingNo == "" {
+		return errors.New("tracking_no is required")
+	}
+	return hdb.Update[ShipM](hyperplt.Tx(ctx), map[string]any{
+		"courier_code": courierCode,
+		"tracking_no":  trackingNo,
+	}, "biz_id = ?", orderId)
+}
