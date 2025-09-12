@@ -3,9 +3,11 @@ package prodord
 import (
 	"context"
 	"errors"
+	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -46,6 +48,7 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 	if err := paras.Validate(); err != nil {
 		return nil, err
 	}
+	hlog.Info("prodord create order", zap.Any("paras", paras))
 	engine, err := f.core.New(ctx, &hiorder.CreateParas[Matter]{
 		Idem:    paras.Idem,
 		Title:   paras.Title,

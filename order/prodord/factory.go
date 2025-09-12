@@ -2,7 +2,6 @@ package prodord
 
 import (
 	"github.com/hootuu/hyper/hiorder"
-	"sync"
 )
 
 const Code = "PROD_ORDER"
@@ -22,14 +21,15 @@ func (f *Factory) Core() *hiorder.Factory[Matter] {
 }
 
 var factory *Factory
-var once sync.Once
+
+//var once sync.Once
 
 func GetFactory() *Factory {
 	if factory != nil {
 		return factory
 	}
-	once.Do(func() {
-		factory = newFactory()
-	})
+	//once.Do(func() {
+	factory = newFactory()
+	//})
 	return factory
 }
