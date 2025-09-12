@@ -8,6 +8,8 @@ import (
 	"github.com/hootuu/hyle/data/tag"
 	"github.com/hootuu/hyle/hypes/collar"
 	"github.com/hootuu/hyper/hyperplt"
+	"math/rand"
+	"time"
 )
 
 const (
@@ -44,4 +46,9 @@ func initUni() error {
 	}
 	gUniVwhID = vwhM.ID
 	return nil
+}
+
+func randNum(minV, maxV int) int {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return r.Intn(maxV-minV+1) + minV
 }
