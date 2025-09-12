@@ -49,6 +49,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"status",
 		"timestamp",
 		"title",
+		"payment",
 		"payment_id",
 		"shipping_id",
 		"consensus_ts",
