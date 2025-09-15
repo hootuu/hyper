@@ -3,6 +3,7 @@ package channel
 import (
 	"context"
 	"fmt"
+
 	"github.com/hootuu/helix/components/htree"
 	"github.com/hootuu/helix/components/zplt"
 	"github.com/hootuu/helix/storage/hdb"
@@ -174,6 +175,9 @@ func Update(ctx context.Context, ch *Channel) error {
 	}
 	if ch.Available != chnM.Available {
 		updateFields["available"] = ch.Available
+	}
+	if ch.Seq != chnM.Seq {
+		updateFields["seq"] = ch.Seq
 	}
 
 	if len(updateFields) == 0 {
