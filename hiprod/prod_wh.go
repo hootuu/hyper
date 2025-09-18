@@ -17,6 +17,8 @@ type SkuUnpPublishParas struct {
 	Sku  prod.SkuID `json:"sku"`
 	Pwh  pwh.ID     `json:"pwh"`
 	Meta dict.Dict  `json:"meta"`
+
+	Quantity uint64 `json:"quantity"`
 }
 
 func (p SkuUnpPublishParas) Validate() error {
@@ -52,8 +54,13 @@ func SkuUnpPublish(ctx context.Context, paras SkuUnpPublishParas) error {
 	}
 
 	err = hdb.Tx(tx, func(innerTx *gorm.DB) error {
+		var inventory uint64
 		quantity := vwhSkuM.Inventory
 		if quantity > 0 {
+			if paras.Quantity > 0 {
+				inventory = quantity - paras.Quantity
+				quantity = paras.Quantity
+			}
 			err = pwh.Unlock(hdb.TxCtx(innerTx), pwh.LockUnlockParas{
 				PwhID:    paras.Pwh,
 				SkuID:    paras.Sku,
@@ -63,15 +70,15 @@ func SkuUnpPublish(ctx context.Context, paras SkuUnpPublishParas) error {
 			if err != nil {
 				return err
 			}
+			err = hdb.Update[vwh.VirtualWhSkuM](innerTx, map[string]any{
+				"inventory": inventory,
+				"version":   gorm.Expr("version + 1"),
+			}, "auto_id = ?", vwhSkuM.AutoID)
+			if err != nil {
+				return err
+			}
 		}
-		err = hdb.Update[vwh.VirtualWhSkuM](innerTx, map[string]any{
-			"inventory": 0,
-			"version":   gorm.Expr("version + 1"),
-		}, "auto_id = ?", vwhSkuM.AutoID)
-		if err != nil {
-			return err
-		}
-		if vwhSkuExtM != nil {
+		if vwhSkuExtM != nil && inventory == 0 {
 			err = hdb.Update[vwh.VirtualWhSkuExtM](innerTx, map[string]any{
 				"available": false,
 			}, "auto_id = ?", vwhSkuExtM.AutoID)
