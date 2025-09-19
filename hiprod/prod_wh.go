@@ -57,8 +57,14 @@ func SkuUnpPublish(ctx context.Context, paras SkuUnpPublishParas) error {
 		var inventory uint64
 		quantity := vwhSkuM.Inventory
 		if quantity > 0 {
+			var useStock uint64
 			if paras.Quantity > 0 {
-				inventory = quantity - paras.Quantity
+				if paras.Quantity > quantity {
+					useStock = paras.Quantity - quantity
+				}
+				if paras.Quantity < quantity {
+					inventory = quantity - paras.Quantity
+				}
 				quantity = paras.Quantity
 			}
 			err = pwh.Unlock(hdb.TxCtx(innerTx), pwh.LockUnlockParas{
@@ -69,6 +75,18 @@ func SkuUnpPublish(ctx context.Context, paras SkuUnpPublishParas) error {
 			})
 			if err != nil {
 				return err
+			}
+			if useStock > 0 {
+				err = pwh.Out(hdb.TxCtx(innerTx), pwh.IntoOutParas{
+					PwhID:    paras.Pwh,
+					SkuID:    paras.Sku,
+					Quantity: quantity,
+					Price:    1,
+					Meta:     paras.Meta,
+				})
+				if err != nil {
+					return err
+				}
 			}
 			err = hdb.Update[vwh.VirtualWhSkuM](innerTx, map[string]any{
 				"inventory": inventory,

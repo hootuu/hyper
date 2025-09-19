@@ -14,6 +14,7 @@ import (
 	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"time"
 )
 
 func BuildVwhExtLink(vwh ID, sku prod.SkuID) string {
@@ -337,5 +338,9 @@ func UpdateSkuExt(ctx context.Context, paras UpdateVwhSkuParas) error {
 	if err != nil {
 		return err
 	}
+
+	_ = hdb.Update[VirtualWhSkuM](tx, map[string]any{
+		"updated_at": time.Now(),
+	}, "vwh = ? and sku = ?", vwhSkuExtM.Vwh, vwhSkuExtM.Sku)
 	return nil
 }
