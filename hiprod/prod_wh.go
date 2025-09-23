@@ -10,6 +10,7 @@ import (
 	"github.com/hootuu/hyper/hiprod/vwh"
 	"github.com/hootuu/hyper/hyperplt"
 	"gorm.io/gorm"
+	"time"
 )
 
 type SkuUnpPublishParas struct {
@@ -100,6 +101,13 @@ func SkuUnpPublish(ctx context.Context, paras SkuUnpPublishParas) error {
 			err = hdb.Update[vwh.VirtualWhSkuExtM](innerTx, map[string]any{
 				"available": false,
 			}, "auto_id = ?", vwhSkuExtM.AutoID)
+			if err != nil {
+				return err
+			}
+
+			_ = hdb.Update[vwh.VirtualWhSkuM](innerTx, map[string]any{
+				"updated_at": time.Now(),
+			}, "auto_id = ?", vwhSkuM.AutoID)
 			if err != nil {
 				return err
 			}
