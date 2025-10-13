@@ -260,7 +260,7 @@ type UpdateVwhSkuParas struct {
 	Pwh     pwh.ID     `json:"pwh"`
 	Price   uint64     `json:"price"`
 	Channel uint64     `json:"channel"`
-	Sort    uint64     `json:"sort"`
+	Sort    *uint64    `json:"sort"`
 	Meta    dict.Dict  `json:"meta"`
 }
 
@@ -312,8 +312,8 @@ func UpdateSkuExt(ctx context.Context, paras UpdateVwhSkuParas) error {
 		return err
 	}
 	mut := make(map[string]any)
-	if paras.Sort > 0 {
-		mut["sort"] = paras.Sort
+	if paras.Sort != nil {
+		mut["sort"] = *paras.Sort
 	}
 	if paras.Channel > 0 {
 		mut["channel"] = paras.Channel
