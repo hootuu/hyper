@@ -23,7 +23,9 @@ func (e *Engine[T]) mustFsm() *hfsm.Machine {
 			AddTransition(Initial, CompleteEvent, e.advToCompleted).
 			AddTransition(Consensus, ExecuteEvent, e.advToExecuting).
 			AddTransition(Consensus, CompleteEvent, e.advToCompleted).
-			AddTransition(Executing, CompleteEvent, e.advToCompleted)
+			AddTransition(Executing, CompleteEvent, e.advToCompleted).
+			AddTransition(Consensus, RefundEvent, e.advToRefunded).
+			AddTransition(Executing, RefundEvent, e.advToRefunded)
 	}
 	return e.fsm
 }
@@ -98,7 +100,7 @@ func (e *Engine[T]) doSetStatus(
 		mut["executing_time"] = gorm.Expr("CURRENT_TIMESTAMP")
 	case Canceled:
 		mut["canceled_time"] = gorm.Expr("CURRENT_TIMESTAMP")
-	case Completed:
+	case Completed, Refunded:
 		mut["completed_time"] = gorm.Expr("CURRENT_TIMESTAMP")
 	case Timeout:
 		mut["timeout_time"] = gorm.Expr("CURRENT_TIMESTAMP")

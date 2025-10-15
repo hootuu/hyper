@@ -13,6 +13,7 @@ const (
 	Completed //已完成
 	Canceled  //已取消
 	Timeout   //已超时
+	Refunded  //已退款
 )
 
 const (
@@ -23,6 +24,7 @@ const (
 	CompleteEvent
 	TimeoutEvent
 	CancelEvent
+	RefundEvent
 )
 
 type ExStatus = hfsm.State
