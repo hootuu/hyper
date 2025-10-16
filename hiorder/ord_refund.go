@@ -23,6 +23,7 @@ func (e *Engine[T]) advToRefunded(
 
 func (e *Engine[T]) DoAdvToRefunded(
 	ctx context.Context,
+	mutSet func(ordM *OrderM, mustMut map[string]any),
 ) (err error) {
-	return e.doAdvance(ctx, RefundEvent, nil)
+	return e.doAdvance(ctx, RefundEvent, mutSet)
 }
