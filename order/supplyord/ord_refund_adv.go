@@ -12,16 +12,16 @@ import (
 	"time"
 )
 
-func DoOrderCompleted(ctx context.Context, orderID hiorder.ID) error {
+func DoOrderRefund(ctx context.Context, orderID hiorder.ID) error {
 	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
 	if err != nil {
 		return nil
 	}
-	if orderM.Status != hiorder.Executing {
+	if orderM.Status != hiorder.Executing && orderM.Status != hiorder.Consensus {
 		return errors.New("order status is invalid")
 	}
 	err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
-		"status":         hiorder.Completed,
+		"status":         hiorder.Refunded,
 		"completed_time": time.Now(),
 	}, "id = ?", orderID)
 	if err != nil {
@@ -30,12 +30,12 @@ func DoOrderCompleted(ctx context.Context, orderID hiorder.ID) error {
 	return nil
 }
 
-func DoOrderCompletedAdv(ctx context.Context, orderID hiorder.ID) error {
+func DoOrderRefundAdv(ctx context.Context, orderID hiorder.ID) error {
 	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
 	if err != nil {
 		return err
 	}
-	if orderM.Status == hiorder.Completed {
+	if orderM.Status == hiorder.Refunded {
 		supOrder, err := GetByProdOrderID(ctx, orderID)
 		if err != nil {
 			return err
@@ -45,7 +45,7 @@ func DoOrderCompletedAdv(ctx context.Context, orderID hiorder.ID) error {
 			return nil
 		}
 		err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
-			"status":         hiorder.Completed,
+			"status":         hiorder.Refunded,
 			"completed_time": orderM.CompletedTime,
 		}, "id = ?", supOrder.ID)
 		if err != nil {
