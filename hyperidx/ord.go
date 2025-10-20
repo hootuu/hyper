@@ -99,9 +99,9 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	if m.Payer != "" {
 		doc["payer"] = idx.GetPayerDigest(m.Payer)
 	}
-	if m.Payee != "" {
-		doc["payee"] = idx.GetPayerDigest(m.Payee)
-	}
+	//if m.Payee != "" {
+	//	doc["payee"] = idx.GetPayerDigest(m.Payee)
+	//}
 	doc["amount"] = m.Amount
 	doc["status"] = m.Status
 	doc["matter"] = m.Matter
