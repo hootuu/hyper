@@ -14,7 +14,11 @@ func (e *Engine[T]) advToRefunded(
 	data ...dict.Dict,
 ) (hfsm.State, error) {
 	orderID := cast.ToUint64(data[0].Get("order_id").String())
-	err := e.doSetStatus(ctx, orderID, Refunded, src, nil)
+	var mut dict.Dict
+	if len(data) > 1 {
+		mut = data[1]
+	}
+	err := e.doSetStatus(ctx, orderID, Refunded, src, mut)
 	if err != nil {
 		return 0, err
 	}
