@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/hootuu/helix/storage/hdb"
+	"github.com/hootuu/hyle/data/dict"
+	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
@@ -48,4 +50,14 @@ func onJobAlter(ctx context.Context, jobID JobID, src JobStatus, dst JobStatus) 
 		return err
 	}
 	return nil
+}
+
+func UpdateJobPayType(ctx context.Context, paymentID uint64, payType string) (err error) {
+	payM, err := hdb.MustGet[JobM](hyperplt.DB(), "payment_id = ?", paymentID)
+	if err != nil {
+		return err
+	}
+	ext := *hjson.MustFromBytes[dict.Dict](payM.Ctx)
+	ext["third_code"] = payType
+	return hdb.Update[JobM](hyperplt.Tx(ctx), map[string]any{"ctx": hjson.MustToBytes(ext)}, "auto_id = ?", payM.AutoID)
 }
