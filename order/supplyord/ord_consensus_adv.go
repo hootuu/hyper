@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func DoOrderConsensus(ctx context.Context, orderID hiorder.ID) error {
+func DoOrderConsensus(ctx context.Context, orderID hiorder.ID, payTime string) error {
 	orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
 	if err != nil {
 		return err
@@ -21,9 +21,13 @@ func DoOrderConsensus(ctx context.Context, orderID hiorder.ID) error {
 	if orderM.Status != hiorder.Initial {
 		return errors.New("order status is incorrect")
 	}
+	consensusTime := time.Now()
+	if payTime != "" {
+		consensusTime, _ = time.Parse(time.DateTime, payTime)
+	}
 	err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
 		"status":         hiorder.Consensus,
-		"consensus_time": time.Now(),
+		"consensus_time": consensusTime,
 	}, "id = ?", orderID)
 	if err != nil {
 		return err
