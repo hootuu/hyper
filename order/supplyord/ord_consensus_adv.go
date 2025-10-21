@@ -23,7 +23,8 @@ func DoOrderConsensus(ctx context.Context, orderID hiorder.ID, payTime string) e
 	}
 	consensusTime := time.Now()
 	if payTime != "" {
-		consensusTime, _ = time.Parse(time.DateTime, payTime)
+		cst, _ := time.LoadLocation("Asia/Shanghai")
+		consensusTime, _ = time.ParseInLocation(time.DateTime, payTime, cst)
 	}
 	err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
 		"status":         hiorder.Consensus,
