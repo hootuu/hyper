@@ -15,7 +15,7 @@ require (
 	github.com/hootuu/helix v0.0.0-20250711162321-a833764b143b
 	github.com/hootuu/hyle v1.0.0
 	github.com/meilisearch/meilisearch-go v0.32.0
-	github.com/nineora/harmonic v0.0.0-00010101000000-000000000000
+	github.com/nineora/harmonic v0.0.0-20250929091858-57c7de70bae6
 	github.com/spf13/cast v1.7.1
 	go.uber.org/zap v1.27.0
 	gorm.io/datatypes v1.2.5
