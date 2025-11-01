@@ -50,7 +50,7 @@ func (paras *CreateParas) Validate() error {
 		return errors.New("jobs is required")
 	}
 	if paras.Timeout == 0 {
-		paras.Timeout = 15 * time.Minute
+		paras.Timeout = 4 * time.Hour
 	}
 	return nil
 }
