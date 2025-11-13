@@ -5,6 +5,7 @@ import (
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/nineora/lightv/lightv"
+	"go.uber.org/zap"
 )
 
 type Deal struct {
@@ -28,6 +29,22 @@ func (d *Deal) Before(ctx context.Context, src hiorder.Status, target hiorder.St
 }
 
 func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Status) (err error) {
+	if d.ord == nil {
+		hlog.TraceFix("gjjord.Deal.After: order is nil", ctx, nil)
+		return nil
+	}
+	defer hlog.EL(ctx, "gjjord.Deal.After").
+		With(
+			zap.Uint64("orderID", d.ord.ID),
+			zap.String("buyer", d.ord.Payer.MustToID()),
+			zap.Uint64("orderAmount", d.ord.Amount),
+			zap.String("biz", d.Code()),
+		).
+		EndWith(func() []zap.Field {
+			return []zap.Field{
+				zap.Error(err),
+			}
+		})()
 	if target == hiorder.Consensus {
 		go func(d *Deal) {
 			if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount, d.Code(), nil); err != nil {
