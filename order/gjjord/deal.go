@@ -2,7 +2,9 @@ package gjjord
 
 import (
 	"context"
+	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
+	"github.com/nineora/lightv/lightv"
 )
 
 type Deal struct {
@@ -26,5 +28,13 @@ func (d *Deal) Before(ctx context.Context, src hiorder.Status, target hiorder.St
 }
 
 func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Status) (err error) {
+	if target == hiorder.Consensus {
+		go func(d *Deal) {
+			if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount, d.Code(), nil); err != nil {
+				hlog.TraceErr("gjjord.Deal.After: AwardByOrder failed", ctx, err)
+			}
+		}(d)
+		return nil
+	}
 	return nil
 }

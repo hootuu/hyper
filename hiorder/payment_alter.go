@@ -55,8 +55,5 @@ func (f *Factory[T]) onPaymentAlter(ctx context.Context, payload *payment.AlterP
 	default:
 		return nil
 	}
-	if err != nil {
-		return err
-	}
 	return nil
 }
