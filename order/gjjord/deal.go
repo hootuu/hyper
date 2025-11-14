@@ -49,7 +49,8 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 	if target == hiorder.Consensus {
 		go func(d *Deal) {
 			cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
-			if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount-cost, d.Code(), nil); err != nil {
+			totalCost := cost * d.ord.Matter.Count
+			if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount-totalCost, d.Code(), nil); err != nil {
 				hlog.TraceErr("gjjord.Deal.After: AwardByOrder failed", ctx, err)
 			}
 		}(d)
