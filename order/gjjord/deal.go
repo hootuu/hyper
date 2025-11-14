@@ -5,6 +5,7 @@ import (
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/nineora/lightv/lightv"
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 )
 
@@ -47,7 +48,8 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 		})()
 	if target == hiorder.Consensus {
 		go func(d *Deal) {
-			if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount, d.Code(), nil); err != nil {
+			cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
+			if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount-cost, d.Code(), nil); err != nil {
 				hlog.TraceErr("gjjord.Deal.After: AwardByOrder failed", ctx, err)
 			}
 		}(d)
