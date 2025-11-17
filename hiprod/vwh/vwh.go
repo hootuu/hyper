@@ -177,7 +177,7 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 					Channel:   paras.Channel,
 					Available: true,
 					Sort:      0,
-					Sales:     uint64(randNum(100, 9999)),
+					Sales:     uint64(randNum(50, 1000)),
 				})
 				if err != nil {
 					return err

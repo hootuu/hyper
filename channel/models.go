@@ -7,10 +7,10 @@ import (
 
 type ChnM struct {
 	hdb.Basic
-	Biz       collar.ID `gorm:"column:biz;index;size:64;"`
+	Biz       collar.ID `gorm:"column:biz;index;size:64;uniqueIndex:uk_parent_name_biz;"`
 	ID        ID        `gorm:"column:id;primaryKey;autoIncrement:false;"`
-	Parent    ID        `gorm:"column:parent;uniqueIndex:uk_parent_name;"`
-	Name      string    `gorm:"column:name;uniqueIndex:uk_parent_name;not null;size:32;"`
+	Parent    ID        `gorm:"column:parent;uniqueIndex:uk_parent_name_biz;"`
+	Name      string    `gorm:"column:name;uniqueIndex:uk_parent_name_biz;not null;size:32;"`
 	Icon      string    `gorm:"column:icon;size:300;"`
 	Seq       int       `gorm:"column:seq;"`
 	Available bool      `gorm:"column:available"`

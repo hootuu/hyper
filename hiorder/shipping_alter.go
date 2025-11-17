@@ -45,9 +45,6 @@ func (f *Factory[T]) onShippingAlter(ctx context.Context, payload *shipping.Alte
 	default:
 		return nil
 	}
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

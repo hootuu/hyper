@@ -1,4 +1,4 @@
-package prodord
+package gjjord
 
 import (
 	"context"
@@ -48,7 +48,7 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 	if err := paras.Validate(); err != nil {
 		return nil, err
 	}
-	hlog.Info("prodord create order", zap.Any("paras", paras))
+	hlog.Info("gjjord create order", zap.Any("paras", paras))
 	engine, err := f.core.New(ctx, &hiorder.CreateParas[Matter]{
 		Idem:    paras.Idem,
 		Title:   paras.Title,
