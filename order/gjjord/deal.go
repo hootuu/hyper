@@ -47,13 +47,21 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 			}
 		})()
 	if target == hiorder.Consensus {
-		go func(d *Deal) {
-			cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
-			totalCost := cost * d.ord.Matter.Count
-			if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount-totalCost, d.Code(), nil); err != nil {
-				hlog.TraceErr("gjjord.Deal.After: AwardByOrder failed", ctx, err)
+		if d.ord.Ex.Meta.Get("is_promotion").Bool() {
+			eng, err := GetFactory().Core().Load(ctx, d.ord.ID)
+			if err != nil {
+				return err
 			}
-		}(d)
+			return eng.AdvToCompleted(ctx)
+		} else {
+			go func(d *Deal) {
+				cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
+				totalCost := cost * d.ord.Matter.Count
+				if err := lightv.Assets.AwardByOrder(ctx, d.ord.ID, d.ord.Payer.MustToID(), d.ord.Amount-totalCost, d.Code(), nil); err != nil {
+					hlog.TraceErr("gjjord.Deal.After: AwardByOrder failed", ctx, err)
+				}
+			}(d)
+		}
 		return nil
 	}
 	return nil
