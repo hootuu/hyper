@@ -81,5 +81,11 @@ func UpdateShippingAddr(ctx context.Context, params shipping.UpdateAddrParams) e
 	if orderM.Status != Consensus {
 		return errors.New("order status is not consensus, can not update shipping address")
 	}
-	return shipping.UpdateAddrInfo(ctx, params)
+	err = shipping.UpdateAddrInfo(ctx, params)
+	if err == nil {
+		_ = hdb.Update[OrderM](hyperplt.Tx(ctx), map[string]any{
+			"updated_at": time.Now(),
+		}, "id = ?", params.OrderId)
+	}
+	return err
 }
