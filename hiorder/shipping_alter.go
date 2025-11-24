@@ -85,7 +85,7 @@ func UpdateShippingAddr(ctx context.Context, params shipping.UpdateAddrParams) e
 	if err == nil {
 		_ = hdb.Update[OrderM](hyperplt.Tx(ctx), map[string]any{
 			"updated_at": time.Now(),
-		}, "id = ?", params.OrderId)
+		}, "id = ?", orderM.ID)
 	}
 	return err
 }
