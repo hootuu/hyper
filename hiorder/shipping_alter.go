@@ -69,3 +69,17 @@ func UpdateShipping(ctx context.Context, orderId, courierCode, trackingNo string
 		"updated_at": time.Now(),
 	}, "id = ?", orderId)
 }
+
+func UpdateShippingAddr(ctx context.Context, params shipping.UpdateAddrParams) error {
+	if params.OrderId == "" {
+		return errors.New("order_id is required")
+	}
+	orderM, err := DbMustGet(ctx, params.OrderId)
+	if err != nil {
+		return err
+	}
+	if orderM.Status != Consensus {
+		return errors.New("order status is not consensus, can not update shipping address")
+	}
+	return shipping.UpdateAddrInfo(ctx, params)
+}

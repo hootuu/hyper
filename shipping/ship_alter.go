@@ -66,3 +66,37 @@ func onShippingAlter(ctx context.Context, payload *AlterPayload) error {
 	}
 	return nil
 }
+
+type UpdateAddrParams struct {
+	OrderId string `json:"orderId"`
+	Name    string `json:"name"`
+	Mobi    string `json:"mobi"`
+	Address string `json:"address"`
+}
+
+func UpdateAddrInfo(ctx context.Context, params UpdateAddrParams) error {
+	if params.OrderId == "" {
+		return errors.New("orderId is required")
+	}
+	if params.Name == "" {
+		return errors.New("name is required")
+	}
+	if params.Mobi == "" {
+		return errors.New("mobi is required")
+	}
+	if params.Address == "" {
+		return errors.New("address is required")
+	}
+	return hdb.Update[ShipM](hyperplt.Tx(ctx), map[string]any{
+		"address": map[string]any{
+			"province": "",
+			"city":     "",
+			"district": "",
+			"address":  params.Address,
+			"contact": map[string]any{
+				"mobi": params.Mobi,
+				"name": params.Name,
+			},
+		},
+	}, "biz_id = ?", params.OrderId)
+}
