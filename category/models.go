@@ -2,6 +2,7 @@ package category
 
 import (
 	"github.com/hootuu/helix/storage/hdb"
+	"time"
 )
 
 type CtgM struct {
@@ -15,9 +16,10 @@ type CtgM struct {
 
 func (m *CtgM) ToCateg() *Categ {
 	return &Categ{
-		ID:       m.ID,
-		Name:     m.Name,
-		Icon:     m.Icon,
-		Children: make([]*Categ, 0),
+		ID:         m.ID,
+		Name:       m.Name,
+		Icon:       m.Icon,
+		CreateTime: m.CreatedAt.Format(time.DateTime),
+		Children:   make([]*Categ, 0),
 	}
 }
