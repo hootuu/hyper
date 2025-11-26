@@ -33,7 +33,7 @@ func newCategory(code string, flag uint, cfg []uint) (*Category, error) {
 	return ctg, nil
 }
 
-func (c *Category) Add(parent htree.ID, name string, icon string) (htree.ID, error) {
+func (c *Category) Add(parent htree.ID, name string, icon string, biz string) (htree.ID, error) {
 	if name == "" {
 		return 0, errors.New("require name")
 	}
@@ -55,11 +55,15 @@ func (c *Category) Add(parent htree.ID, name string, icon string) (htree.ID, err
 	if err != nil {
 		return -1, err
 	}
+	if biz == "" {
+		biz = c.Code
+	}
 	ctgM := &CtgM{
 		ID:     newID,
 		Parent: parent,
 		Name:   name,
 		Icon:   icon,
+		Biz:    biz,
 	}
 	err = hdb.Create[CtgM](c.db().PG().Table(c.tableName()), ctgM)
 	if err != nil {
@@ -100,6 +104,14 @@ func (c *Category) Mut(id htree.ID, name string, icon string) error {
 		return err
 	}
 	return nil
+}
+
+func (c *Category) MustGet(id htree.ID) (*Categ, error) {
+	dbM, err := hdb.MustGet[CtgM](c.db().PG().Table(c.tableName()), "id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	return dbM.ToCateg(), nil
 }
 
 func (c *Category) Get(parent htree.ID, deep int) ([]*Categ, error) {
