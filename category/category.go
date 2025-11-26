@@ -114,6 +114,10 @@ func (c *Category) MustGet(id htree.ID) (*Categ, error) {
 	return dbM.ToCateg(), nil
 }
 
+func (c *Category) Delete(id htree.ID) error {
+	return hdb.Delete[CtgM](c.db().PG().Table(c.tableName()), "id = ?", id)
+}
+
 func (c *Category) Get(parent htree.ID, deep int) ([]*Categ, error) {
 	if deep < 1 || deep > c.tree.Factory().IdDeep() {
 		return nil, fmt.Errorf("invalid deep: %d", deep)
