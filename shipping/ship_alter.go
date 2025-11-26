@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
+	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
@@ -87,16 +88,18 @@ func UpdateAddrInfo(ctx context.Context, params UpdateAddrParams) error {
 	if params.Address == "" {
 		return errors.New("address is required")
 	}
-	return hdb.Update[ShipM](hyperplt.Tx(ctx), map[string]any{
-		"address": map[string]any{
-			"province": "",
-			"city":     "",
-			"district": "",
-			"address":  params.Address,
-			"contact": map[string]any{
-				"mobi": params.Mobi,
-				"name": params.Name,
-			},
+
+	addrMap := map[string]any{
+		"province": "",
+		"city":     "",
+		"district": "",
+		"address":  params.Address,
+		"contact": map[string]any{
+			"mobi": params.Mobi,
+			"name": params.Name,
 		},
+	}
+	return hdb.Update[ShipM](hyperplt.Tx(ctx), map[string]any{
+		"address": hjson.MustToBytes(addrMap),
 	}, "biz_id = ?", params.OrderId)
 }
