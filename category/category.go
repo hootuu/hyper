@@ -164,6 +164,21 @@ func (c *Category) loadChildren(minID htree.ID, maxID htree.ID, base htree.ID) (
 	return arr, nil
 }
 
+func (c *Category) List(ctx context.Context, biz string) ([]*Categ, error) {
+	var arrM []*CtgM
+	if err := c.db().PG().Where("biz = ?", biz).Order("id desc").Find(&arrM).Error; err != nil {
+		return []*Categ{}, err
+	}
+	if len(arrM) == 0 {
+		return []*Categ{}, nil
+	}
+	var arr []*Categ
+	for _, item := range arrM {
+		arr = append(arr, item.ToCateg())
+	}
+	return arr, nil
+}
+
 func (c *Category) Helix() helix.Helix {
 	return helix.BuildHelix(c.Code, func() (context.Context, error) {
 		err := hdb.AutoMigrateWithTable(c.db().PG(), hdb.NewTable(c.tableName(), &CtgM{}))
