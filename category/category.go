@@ -170,7 +170,7 @@ func (c *Category) loadChildren(minID htree.ID, maxID htree.ID, base htree.ID) (
 
 func (c *Category) List(ctx context.Context, biz string) ([]*Categ, error) {
 	var arrM []*CtgM
-	if err := c.db().PG().Where("biz = ?", biz).Order("id desc").Find(&arrM).Error; err != nil {
+	if err := c.db().PG().Table(c.tableName()).Where("biz = ?", biz).Order("id desc").Find(&arrM).Error; err != nil {
 		return []*Categ{}, err
 	}
 	if len(arrM) == 0 {
