@@ -59,6 +59,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"supplier_id",
 		"is_promotion",
 		"category",
+		"gjj_status",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -138,6 +139,13 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 		}
 		doc["is_promotion"] = meta.Get("is_promotion").Bool()
 		doc["category"] = cast.ToInt64(meta.Get("category").Data())
+
+		obj := meta.Get("gjj_info").MSI()
+		if len(obj) > 0 {
+			doc["gjj_status"] = true
+		} else {
+			doc["gjj_status"] = false
+		}
 	}
 	doc["supplier_id"] = supplierId
 
