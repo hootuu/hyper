@@ -56,12 +56,13 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 		}
 		return eng.AdvToCompleted(ctx)
 	} else {
-		go func(d *Deal) {
+		go func(d *Deal, ctx context.Context, target hiorder.Status) {
 			var awErr error
 			defer hlog.EL(ctx, "gjjord.award.After goroutine").
 				With(
 					zap.Uint64("orderID", d.ord.ID),
 					zap.String("buyer", d.ord.Payer.MustToID()),
+					zap.String("targetStatus", cast.ToString(target)),
 					zap.Uint64("orderAmount", d.ord.Amount),
 					zap.String("biz", d.Code()),
 				).
@@ -104,7 +105,7 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 					return
 				}
 			}
-		}(d)
+		}(d, ctx, target)
 	}
 	return nil
 }
