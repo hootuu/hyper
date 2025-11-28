@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hootuu/hyle/hlog"
+	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/nineora/lightv/lightv"
 	"github.com/nineora/lightv/qing"
@@ -75,31 +76,31 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 			buyer := d.ord.Payer.MustToID()
 			amount := d.ord.Amount
 
+			newEx := ex.NewEx()
+			newEx.Meta.Set("player", buyer).Set("order_id", orderID)
+
 			if target == hiorder.Consensus {
 				cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
 				totalCost := cost * d.ord.Matter.Count
-				//if awErr := lightv.Assets.AwardByOrder(ctx, orderID, buyer, amount-totalCost, d.Code(), nil); awErr != nil {
-				//	hlog.TraceErr("gjjord.Deal.After: AwardByOrder failed", ctx, awErr)
-				//}
-				if awErr = lightv.AwardOrderPrepare(ctx, orderID, buyer, amount-totalCost, amount, d.Code(), nil); awErr != nil {
+				if awErr = lightv.AwardOrderPrepare(ctx, orderID, buyer, amount-totalCost, amount, d.Code(), newEx); awErr != nil {
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderPrepare failed", ctx, awErr)
 					return
 				}
 			}
 
 			if target == hiorder.Refunded {
-				if awErr = lightv.AwardOrderCancel(ctx, orderID, buyer, d.Code(), nil); awErr != nil {
+				if awErr = lightv.AwardOrderCancel(ctx, orderID, buyer, d.Code(), newEx); awErr != nil {
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderCancel failed", ctx, awErr)
 					return
 				}
 
 			}
 			if target == hiorder.Completed {
-				if awErr = lightv.AwardOrderConfirm(ctx, orderID, buyer, d.Code(), nil); awErr != nil {
+				if awErr = lightv.AwardOrderConfirm(ctx, orderID, buyer, d.Code(), newEx); awErr != nil {
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderComplete failed", ctx, awErr)
 					return
 				}
-				if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount, nil, 1000, qing.GJJTerrRadioMap); awErr != nil {
+				if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount, newEx, 1000, qing.GJJTerrRadioMap); awErr != nil {
 					hlog.TraceFix(fmt.Sprintf("lightv.AwardByOrder: TerrTaxing failed for order %d", orderID), ctx, awErr, zap.Uint64("orderID", orderID))
 					return
 				}
