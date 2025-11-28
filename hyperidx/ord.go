@@ -60,6 +60,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"is_promotion",
 		"category",
 		"gjj_status",
+		"user_order_id",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -146,6 +147,9 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 		} else {
 			doc["gjj_status"] = false
 		}
+
+		// n19专用查询用户单号
+		doc["user_order_id"] = meta.Get("orderId").String()
 	}
 	doc["supplier_id"] = supplierId
 
