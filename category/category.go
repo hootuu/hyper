@@ -33,7 +33,7 @@ func newCategory(code string, flag uint, cfg []uint) (*Category, error) {
 	return ctg, nil
 }
 
-func (c *Category) Add(parent htree.ID, name string, icon string) (htree.ID, error) {
+func (c *Category) Add(parent htree.ID, name string, icon string, biz string) (htree.ID, error) {
 	if name == "" {
 		return 0, errors.New("require name")
 	}
@@ -55,11 +55,15 @@ func (c *Category) Add(parent htree.ID, name string, icon string) (htree.ID, err
 	if err != nil {
 		return -1, err
 	}
+	if biz == "" {
+		biz = c.Code
+	}
 	ctgM := &CtgM{
 		ID:     newID,
 		Parent: parent,
 		Name:   name,
 		Icon:   icon,
+		Biz:    biz,
 	}
 	err = hdb.Create[CtgM](c.db().PG().Table(c.tableName()), ctgM)
 	if err != nil {
@@ -102,6 +106,18 @@ func (c *Category) Mut(id htree.ID, name string, icon string) error {
 	return nil
 }
 
+func (c *Category) MustGet(id htree.ID) (*Categ, error) {
+	dbM, err := hdb.MustGet[CtgM](c.db().PG().Table(c.tableName()), "id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	return dbM.ToCateg(), nil
+}
+
+func (c *Category) Delete(id htree.ID) error {
+	return hdb.Delete[CtgM](c.db().PG().Table(c.tableName()), "id = ?", id)
+}
+
 func (c *Category) Get(parent htree.ID, deep int) ([]*Categ, error) {
 	if deep < 1 || deep > c.tree.Factory().IdDeep() {
 		return nil, fmt.Errorf("invalid deep: %d", deep)
@@ -140,6 +156,21 @@ func (c *Category) loadChildren(minID htree.ID, maxID htree.ID, base htree.ID) (
 			Where("id % ? = 0 AND id >= ? AND id <= ?", base, minID, maxID)
 	})
 	if err != nil {
+		return []*Categ{}, err
+	}
+	if len(arrM) == 0 {
+		return []*Categ{}, nil
+	}
+	var arr []*Categ
+	for _, item := range arrM {
+		arr = append(arr, item.ToCateg())
+	}
+	return arr, nil
+}
+
+func (c *Category) List(ctx context.Context, biz string) ([]*Categ, error) {
+	var arrM []*CtgM
+	if err := c.db().PG().Table(c.tableName()).Where("biz = ?", biz).Order("id desc").Find(&arrM).Error; err != nil {
 		return []*Categ{}, err
 	}
 	if len(arrM) == 0 {
