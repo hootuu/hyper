@@ -55,7 +55,10 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 		if err != nil {
 			return err
 		}
-		return eng.AdvToCompleted(ctx)
+		if eng.GetOrder().Status == hiorder.Consensus {
+			return eng.AdvToCompleted(ctx)
+		}
+		return nil
 	} else {
 		go func(d *Deal, ctx context.Context, target hiorder.Status) {
 			var awErr error
