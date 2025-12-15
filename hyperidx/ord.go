@@ -20,7 +20,7 @@ import (
 
 const (
 	OrdIndex      = "hyper_order"
-	ordIdxVersion = "1_0_5"
+	ordIdxVersion = "1_0_6"
 )
 
 type TxOrdIndexer struct{}
@@ -61,6 +61,7 @@ func (idx *TxOrdIndexer) Setting(index meilisearch.IndexManager) error {
 		"category",
 		"gjj_status",
 		"user_order_id",
+		"seller",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -152,7 +153,7 @@ func (idx *TxOrdIndexer) Load(autoID int64) (hmeili.Document, error) {
 		doc["user_order_id"] = meta.Get("orderId").String()
 	}
 	doc["supplier_id"] = supplierId
-
+	doc["seller"] = cast.ToString(meta.Get("game.forge.creator").Data())
 	doc["tag"] = m.Tag
 	doc["ctrl"] = m.Ctrl
 	doc["meta"] = m.Meta
