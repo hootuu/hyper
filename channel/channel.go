@@ -131,6 +131,7 @@ func loadChildren(ctx context.Context, minID htree.ID, maxID htree.ID, base htre
 		if available != nil {
 			query = query.Where("available = ?", *available)
 		}
+		query.Order("seq DESC").Order("id DESC")
 		return query
 	})
 	if err != nil {
