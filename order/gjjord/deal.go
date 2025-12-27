@@ -89,7 +89,7 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 				hlog.TraceErr("gjjord.Deal.After: DbMustGet failed", ctx, err)
 				return
 			}
-			limitTime := time.Date(2025, 12, 27, 16, 0, 0, 0, time.Local)
+			limitTime := time.Date(2025, 12, 27, 17, 0, 0, 0, time.Local)
 			isLock := orderM.CompletedTime.Before(limitTime)
 
 			if target == hiorder.Consensus {
