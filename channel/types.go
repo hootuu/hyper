@@ -24,7 +24,7 @@ type Channel struct {
 	Icon      string     `json:"icon"`
 	Seq       int        `json:"seq"`
 	Children  []*Channel `json:"children"`
-	Available bool       `gorm:"column:available"`
+	Available bool       `json:"available"`
 }
 
 func (c *Channel) AddChild(child *Channel) *Channel {

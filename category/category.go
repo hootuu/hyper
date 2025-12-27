@@ -168,9 +168,21 @@ func (c *Category) loadChildren(minID htree.ID, maxID htree.ID, base htree.ID) (
 	return arr, nil
 }
 
-func (c *Category) List(ctx context.Context, biz string) ([]*Categ, error) {
+type CateQuery struct {
+	Biz string
+	Ids []int64
+}
+
+func (c *Category) List(ctx context.Context, query CateQuery) ([]*Categ, error) {
 	var arrM []*CtgM
-	if err := c.db().PG().Table(c.tableName()).Where("biz = ?", biz).Order("id desc").Find(&arrM).Error; err != nil {
+	db := c.db().PG().Table(c.tableName())
+	if len(query.Ids) > 0 {
+		db = db.Where("id IN ?", query.Ids)
+	}
+	if query.Biz != "" {
+		db = db.Where("biz = ?", query.Biz)
+	}
+	if err := db.Order("id desc").Find(&arrM).Error; err != nil {
 		return []*Categ{}, err
 	}
 	if len(arrM) == 0 {

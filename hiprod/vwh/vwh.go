@@ -188,6 +188,7 @@ func SetSku(ctx context.Context, paras SetSkuParas) error {
 		return err
 	}
 	_ = hdb.Update[VirtualWhSkuExtM](tx, map[string]any{
+		"channel":   paras.Channel,
 		"available": true,
 	}, "vwh = ? AND sku = ? AND pwh = ?", paras.Vwh, paras.Sku, paras.Pwh)
 

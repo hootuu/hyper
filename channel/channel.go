@@ -93,7 +93,7 @@ func Add(
 	return nil
 }
 
-func Get(ctx context.Context, parent ID, deep int, biz collar.Collar) ([]*Channel, error) {
+func Get(ctx context.Context, parent ID, deep int, biz collar.Collar, available *bool) ([]*Channel, error) {
 	if deep < 1 || deep > gChannelIdTree.Factory().IdDeep() {
 		return nil, fmt.Errorf("invalid deep: %d", deep)
 	}
@@ -105,7 +105,7 @@ func Get(ctx context.Context, parent ID, deep int, biz collar.Collar) ([]*Channe
 		return nil, err
 	}
 	var arr []*Channel
-	arr, err = loadChildren(ctx, minID, maxID, base, biz)
+	arr, err = loadChildren(ctx, minID, maxID, base, biz, available)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func Get(ctx context.Context, parent ID, deep int, biz collar.Collar) ([]*Channe
 		return arr, nil
 	}
 	for _, categ := range arr {
-		categ.Children, err = Get(ctx, categ.ID, newDeep, biz)
+		categ.Children, err = Get(ctx, categ.ID, newDeep, biz, available)
 		if err != nil {
 			return nil, err
 		}
@@ -125,9 +125,14 @@ func Get(ctx context.Context, parent ID, deep int, biz collar.Collar) ([]*Channe
 	return arr, nil
 }
 
-func loadChildren(ctx context.Context, minID htree.ID, maxID htree.ID, base htree.ID, biz collar.Collar) ([]*Channel, error) {
+func loadChildren(ctx context.Context, minID htree.ID, maxID htree.ID, base htree.ID, biz collar.Collar, available *bool) ([]*Channel, error) {
 	arrM, err := hdb.Find[ChnM](func() *gorm.DB {
-		return db(ctx).Where("id % ? = 0 AND id >= ? AND id <= ? and biz = ?", base, minID, maxID, biz.ToSafeID())
+		query := db(ctx).Where("id % ? = 0 AND id >= ? AND id <= ? and biz = ?", base, minID, maxID, biz.ToSafeID())
+		if available != nil {
+			query = query.Where("available = ?", *available)
+		}
+		query.Order("seq DESC").Order("id DESC")
+		return query
 	})
 	if err != nil {
 		return []*Channel{}, err
@@ -190,7 +195,7 @@ func Update(ctx context.Context, ch *Channel) error {
 	return nil
 }
 
-func List(ctx context.Context, biz collar.Collar, available *bool) ([]*Channel, error) {
+func List(ctx context.Context, biz collar.Collar, available *bool, parent ID) ([]*Channel, error) {
 	tx := db(ctx)
 
 	var arrM []*ChnM
@@ -198,8 +203,11 @@ func List(ctx context.Context, biz collar.Collar, available *bool) ([]*Channel, 
 	if available != nil {
 		query = query.Where("available = ?", *available)
 	}
+	if parent > 0 {
+		query = query.Where("parent = ?", parent)
+	}
 
-	if err := query.Order("seq ASC").Find(&arrM).Error; err != nil {
+	if err := query.Order("seq DESC").Order("id DESC").Find(&arrM).Error; err != nil {
 		return []*Channel{}, err
 	}
 
