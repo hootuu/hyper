@@ -178,7 +178,7 @@ func useAddr(id string) error {
 
 func listAddrByOwner(owner sattva.Identification) ([]*AddrM, error) {
 	arrM, err := hdb.Find[AddrM](func() *gorm.DB {
-		return zplt.HelixPgDB().PG().Where("owner = ?", owner)
+		return zplt.HelixPgDB().PG().Where("owner = ?", owner).Order("created_at desc")
 	})
 	if err != nil {
 		return nil, err
