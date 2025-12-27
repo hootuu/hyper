@@ -89,6 +89,7 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 				hlog.TraceErr("gjjord.Deal.After: DbMustGet failed", ctx, err)
 				return
 			}
+			// 2025-12-27 17:00:00 之前的订单，奖励的道具都需要冻结和解冻
 			limitTime := time.Date(2025, 12, 27, 17, 0, 0, 0, time.Local)
 			isLock := orderM.ConsensusTime.Before(limitTime)
 
