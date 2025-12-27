@@ -90,7 +90,7 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 				return
 			}
 			limitTime := time.Date(2025, 12, 27, 17, 0, 0, 0, time.Local)
-			isLock := orderM.CompletedTime.Before(limitTime)
+			isLock := orderM.ConsensusTime.Before(limitTime)
 
 			if target == hiorder.Consensus {
 				cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
