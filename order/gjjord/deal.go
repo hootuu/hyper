@@ -10,6 +10,7 @@ import (
 	"github.com/nineora/lightv/qing"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
+	"time"
 )
 
 type Deal struct {
@@ -83,24 +84,32 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 			newEx := ex.NewEx()
 			newEx.Meta.Set("player", buyer).Set("order_id", orderID)
 
+			orderM, err := hiorder.DbMustGet(ctx, cast.ToString(orderID))
+			if err != nil {
+				hlog.TraceErr("gjjord.Deal.After: DbMustGet failed", ctx, err)
+				return
+			}
+			limitTime := time.Date(2025, 12, 27, 16, 0, 0, 0, time.Local)
+			isLock := orderM.CompletedTime.Before(limitTime)
+
 			if target == hiorder.Consensus {
 				cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
 				totalCost := cost * d.ord.Matter.Count
-				if awErr = lightv.AwardOrderPrepare(ctx, orderID, buyer, amount-totalCost, amount, d.Code(), newEx); awErr != nil {
+				if awErr = lightv.AwardOrderPrepare(ctx, isLock, orderID, buyer, amount-totalCost, amount, d.Code(), newEx); awErr != nil {
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderPrepare failed", ctx, awErr)
 					return
 				}
 			}
 
 			if target == hiorder.Refunded {
-				if awErr = lightv.AwardOrderCancel(ctx, orderID, buyer, d.Code(), newEx); awErr != nil {
+				if awErr = lightv.AwardOrderCancel(ctx, isLock, orderID, buyer, d.Code(), newEx); awErr != nil {
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderCancel failed", ctx, awErr)
 					return
 				}
 
 			}
 			if target == hiorder.Completed {
-				if awErr = lightv.AwardOrderConfirm(ctx, orderID, buyer, d.Code(), newEx); awErr != nil {
+				if awErr = lightv.AwardOrderConfirm(ctx, isLock, orderID, buyer, d.Code(), newEx); awErr != nil {
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderComplete failed", ctx, awErr)
 					return
 				}
