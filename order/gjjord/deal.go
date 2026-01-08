@@ -117,7 +117,9 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderComplete failed", ctx, awErr)
 					return
 				}
-				if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount, newEx, 10000, qing.GJJTerrRadioMap); awErr != nil {
+				cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
+				totalCost := cost * d.ord.Matter.Count
+				if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, newEx, 10000, qing.GJJTerrRadioMap); awErr != nil {
 					hlog.TraceFix(fmt.Sprintf("lightv.AwardByOrder: TerrTaxing failed for order %d", orderID), ctx, awErr, zap.Uint64("orderID", orderID))
 					return
 				}
