@@ -69,10 +69,13 @@ func onShippingAlter(ctx context.Context, payload *AlterPayload) error {
 }
 
 type UpdateAddrParams struct {
-	OrderId string `json:"orderId"`
-	Name    string `json:"name"`
-	Mobi    string `json:"mobi"`
-	Address string `json:"address"`
+	OrderId  string `json:"orderId"`
+	Name     string `json:"name"`
+	Mobi     string `json:"mobi"`
+	Address  string `json:"address"`
+	Province string `json:"province"`
+	City     string `json:"city"`
+	District string `json:"district"`
 }
 
 func UpdateAddrInfo(ctx context.Context, params UpdateAddrParams) error {
@@ -90,9 +93,9 @@ func UpdateAddrInfo(ctx context.Context, params UpdateAddrParams) error {
 	}
 
 	addrMap := map[string]any{
-		"province": "",
-		"city":     "",
-		"district": "",
+		"province": params.Province,
+		"city":     params.City,
+		"district": params.District,
 		"address":  params.Address,
 		"contact": map[string]any{
 			"mobi": params.Mobi,
