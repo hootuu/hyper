@@ -7,6 +7,7 @@ import (
 	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hlog"
+	"github.com/hootuu/hyle/hretry"
 	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
 )
@@ -23,10 +24,18 @@ func onJobAlter(ctx context.Context, jobID JobID, src JobStatus, dst JobStatus) 
 			},
 		)()
 	}
-	jobM, err := hdb.Get[JobM](hyperplt.Tx(ctx), "id=? AND status=?", jobID, dst)
-	if err != nil {
-		return err
-	}
+	var jobM *JobM
+	hretry.Universal(func() error {
+		var errInner error
+		jobM, errInner = hdb.Get[JobM](hyperplt.Tx(ctx), "id=? AND status=?", jobID, dst)
+		if errInner != nil {
+			return errInner
+		}
+		if jobM == nil {
+			return errors.New("no such job")
+		}
+		return nil
+	})
 	if jobM == nil {
 		hlog.TraceFix("hyper.payment.onJobAlter",
 			ctx, errors.New("no such job"),
