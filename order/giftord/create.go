@@ -74,7 +74,7 @@ func (f *Factory) CreateAndPay(ctx context.Context, paras *CreateParas) (*hiorde
 		return nil, err
 	}
 
-	err = hdb.Update[hiorder.OrderM](hyperplt.DB(), map[string]any{
+	err = hdb.Update[hiorder.OrderM](hyperplt.Tx(ctx), map[string]any{
 		"status":         hiorder.Consensus,
 		"consensus_time": time.Now(),
 	}, "id = ?", engine.GetOrder().ID)
