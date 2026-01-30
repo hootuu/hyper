@@ -56,7 +56,7 @@ func (f *Factory) CreateAndPay(ctx context.Context, paras *CreateParas) (*hiorde
 		Title:   paras.Title,
 		Payer:   paras.Payer,
 		Payee:   paras.Payee,
-		Amount:  paras.Amount,
+		Amount:  0,
 		Payment: nil,
 		Link:    collar.Build(f.core.Code(), paras.Payer.MustToID()).Link(),
 		Matter: Matter{
