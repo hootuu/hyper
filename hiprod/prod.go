@@ -3,6 +3,7 @@ package hiprod
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/hootuu/helix/storage/hdb"
 	"github.com/hootuu/hyle/data/ctrl"
 	"github.com/hootuu/hyle/data/dict"
@@ -128,6 +129,23 @@ func CreateProduct(ctx context.Context, paras *ProdCreateParas) (skuID prod.SkuI
 	return skuID, nil
 }
 
+func CheckProductNo(spuId uint64, productNo string) error {
+	var err error
+	var exists bool
+	if spuId > 0 {
+		exists, err = hdb.Exist[prod.SpuM](hyperplt.DB(), "product_no = ? AND id != ?", productNo, spuId)
+	} else {
+		exists, err = hdb.Exist[prod.SpuM](hyperplt.DB(), "product_no = ?", productNo)
+	}
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("商品编号已存在")
+	}
+	return nil
+}
+
 func CreateProductByPwh(ctx context.Context, paras *ProdCreateParas) (skuID prod.SkuID, err error) {
 	if paras == nil {
 		return 0, errors.New("paras is required")
@@ -143,6 +161,13 @@ func CreateProductByPwh(ctx context.Context, paras *ProdCreateParas) (skuID prod
 			}
 			return []zap.Field{zap.Uint64("skuID", skuID)}
 		})()
+	if paras.ProductNo != "" {
+		err = CheckProductNo(0, paras.ProductNo)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	tx := hyperplt.Tx(ctx)
 	err = hdb.Tx(tx, func(tx *gorm.DB) error {
 		innerCtx := hdb.TxCtx(tx, ctx)
@@ -228,6 +253,12 @@ func UpdateProductInfo(ctx context.Context, paras *ProdUpdateParas) (err error) 
 			}
 			return nil
 		})()
+	if paras.ProductNo != "" {
+		err = CheckProductNo(paras.SpuID, paras.ProductNo)
+		if err != nil {
+			return err
+		}
+	}
 
 	tx := hyperplt.Tx(ctx)
 	updateM := map[string]interface{}{}
