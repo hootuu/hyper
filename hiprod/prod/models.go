@@ -20,6 +20,7 @@ type SpuM struct {
 	Cost      uint64         `gorm:"column:cost;size:32;"`
 	Price     uint64         `gorm:"column:price;size:32;"`
 	Available bool           `gorm:"column:available;"`
+	ProductNo string         `gorm:"column:product_no;index;size:64;"`
 }
 
 func (m *SpuM) TableName() string {

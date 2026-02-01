@@ -13,7 +13,7 @@ import (
 
 const (
 	PwhProdIndex      = "hyper_pwh_prod"
-	PwhProdIdxVersion = "1_0_1"
+	PwhProdIdxVersion = "1_0_2"
 )
 
 type TxPwhProdIndexer struct{}
@@ -38,6 +38,7 @@ func (idx *TxPwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 		"brand",
 		"spu_status",
 		"created_at",
+		"product_no",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -94,6 +95,7 @@ func (idx *TxPwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["base_price"] = spuM.Price
 	doc["cost_price"] = spuM.Cost
 	doc["spu_status"] = spuM.Available
+	doc["product_no"] = spuM.ProductNo
 	doc["created_at"] = spuM.CreatedAt.Unix()
 	doc["sku_stock"] = pwhSkuM.Available
 	doc["lock_stock"] = pwhSkuM.Locked

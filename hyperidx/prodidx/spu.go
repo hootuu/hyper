@@ -15,7 +15,7 @@ import (
 
 const (
 	SpuIndex      = "hyper_spu"
-	spuIdxVersion = "1_0_1"
+	spuIdxVersion = "1_0_2"
 )
 
 type TxSpuIndexer struct{}
@@ -40,6 +40,7 @@ func (idx *TxSpuIndexer) Setting(index meilisearch.IndexManager) error {
 		"brand",
 		"spu_status",
 		"created_at",
+		"product_no",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -90,6 +91,7 @@ func (idx *TxSpuIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["cost_price"] = spuM.Cost
 	doc["spu_status"] = spuM.Available
 	doc["created_at"] = spuM.CreatedAt.Unix()
+	doc["product_no"] = spuM.ProductNo
 
 	doc["media"] = spuM.Media
 	doc["ctrl"] = spuM.Ctrl

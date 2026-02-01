@@ -37,6 +37,8 @@ type ProdCreateParas struct {
 	Ctrl      ctrl.Ctrl   `json:"ctrl"`      //optional
 	Tag       tag.Tag     `json:"tag"`       //optional
 	Meta      dict.Dict   `json:"meta"`      //optional
+
+	ProductNo string `json:"product_no"` //optional
 }
 
 func (p *ProdCreateParas) validate() error {
@@ -91,6 +93,7 @@ func CreateProduct(ctx context.Context, paras *ProdCreateParas) (skuID prod.SkuI
 			Media:     hjson.MustToBytes(paras.Media),
 			Cost:      paras.Cost,
 			Available: paras.Available,
+			ProductNo: paras.ProductNo,
 		})
 		if err != nil {
 			return err
@@ -159,6 +162,7 @@ func CreateProductByPwh(ctx context.Context, paras *ProdCreateParas) (skuID prod
 			Cost:      paras.Cost,
 			Price:     paras.Price,
 			Available: paras.Available,
+			ProductNo: paras.ProductNo,
 		})
 		if err != nil {
 			return err
@@ -199,6 +203,7 @@ type ProdUpdateParas struct {
 	Spec      string      `json:"spec"`
 	Medias    media.Dict  `json:"medias"`
 	Available *bool       `json:"available"`
+	ProductNo string      `json:"product_no"`
 }
 
 func (p *ProdUpdateParas) validate() error {
@@ -246,6 +251,9 @@ func UpdateProductInfo(ctx context.Context, paras *ProdUpdateParas) (err error) 
 	}
 	if paras.Available != nil {
 		updateM["available"] = *paras.Available
+	}
+	if paras.ProductNo != "" {
+		updateM["product_no"] = paras.ProductNo
 	}
 	if paras.Spec != "" {
 		meta := map[string]interface{}{

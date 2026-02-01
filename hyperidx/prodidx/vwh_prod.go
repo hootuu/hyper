@@ -13,7 +13,7 @@ import (
 
 const (
 	VwhProdIndex      = "hyper_prod"
-	vwhProdIdxVersion = "1_0_1"
+	vwhProdIdxVersion = "1_0_2"
 )
 
 type TxVwhProdIndexer struct{}
@@ -41,6 +41,7 @@ func (idx *TxVwhProdIndexer) Setting(index meilisearch.IndexManager) error {
 		"created_at",
 		"channel",
 		"available",
+		"product_no",
 	}
 	_, err := index.UpdateFilterableAttributes(&filterableAttributes)
 	if err != nil {
@@ -114,6 +115,7 @@ func (idx *TxVwhProdIndexer) Load(autoID int64) (hmeili.Document, error) {
 	doc["cost_price"] = spuM.Cost
 	doc["spu_status"] = spuM.Available
 	doc["created_at"] = spuM.CreatedAt.Unix()
+	doc["product_no"] = spuM.ProductNo
 
 	doc["media"] = spuM.Media
 	doc["ctrl"] = spuM.Ctrl
