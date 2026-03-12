@@ -2,12 +2,14 @@ package gjjord
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/nineora/lightv/lightv"
+	"github.com/nineora/lightv/qing"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 )
@@ -118,15 +120,15 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 				}
 				cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
 				totalCost := cost * d.ord.Matter.Count
-				//if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, newEx, 10000, qing.GJJTerrRadioMap); awErr != nil {
-				//	hlog.TraceFix(fmt.Sprintf("lightv.AwardByOrder: TerrTaxing failed for order %d", orderID), ctx, awErr, zap.Uint64("orderID", orderID))
-				//	return
-				//}
-				_, awErr = lightv.DispatchTerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, 10000)
-				if awErr != nil {
-					hlog.TraceErr("gjjord.Deal.After: DispatchTerrTaxing failed", ctx, awErr, zap.Uint64("orderID", orderID))
+				if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, newEx, 10000, qing.GJJTerrRadioMap); awErr != nil {
+					hlog.TraceFix(fmt.Sprintf("lightv.AwardByOrder: TerrTaxing failed for order %d", orderID), ctx, awErr, zap.Uint64("orderID", orderID))
 					return
 				}
+				//_, awErr = lightv.DispatchTerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, 10000)
+				//if awErr != nil {
+				//	hlog.TraceErr("gjjord.Deal.After: DispatchTerrTaxing failed", ctx, awErr, zap.Uint64("orderID", orderID))
+				//	return
+				//}
 			}
 		}(d, ctx, target)
 	}
