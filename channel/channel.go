@@ -3,10 +3,13 @@ package channel
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/hootuu/helix/components/htree"
 	"github.com/hootuu/helix/components/zplt"
 	"github.com/hootuu/helix/storage/hdb"
+	"github.com/hootuu/hyle/data/dict"
+	"github.com/hootuu/hyle/data/hjson"
 	"github.com/hootuu/hyle/hypes/collar"
 	"gorm.io/gorm"
 )
@@ -17,6 +20,18 @@ func Create(
 	name string,
 	icon string,
 	seq int,
+	call func(ctx context.Context, chnM *ChnM) error,
+) error {
+	return CreateWithMeta(ctx, biz, name, icon, seq, nil, call)
+}
+
+func CreateWithMeta(
+	ctx context.Context,
+	biz collar.Collar,
+	name string,
+	icon string,
+	seq int,
+	meta dict.Dict,
 	call func(ctx context.Context, chnM *ChnM) error,
 ) error {
 	if name == "" {
@@ -34,15 +49,18 @@ func Create(
 		Name:      name,
 		Icon:      icon,
 		Seq:       seq,
+		Meta:      hjson.MustToBytes(defaultMeta(meta)),
 		Available: false,
 	}
 	err = hdb.Create[ChnM](tx, chnM)
 	if err != nil {
 		return err
 	}
-	err = call(ctx, chnM)
-	if err != nil {
-		return err
+	if call != nil {
+		err = call(ctx, chnM)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -53,6 +71,18 @@ func Add(
 	name string,
 	icon string,
 	seq int,
+	call func(ctx context.Context, chnM *ChnM) error,
+) error {
+	return AddWithMeta(ctx, parent, name, icon, seq, nil, call)
+}
+
+func AddWithMeta(
+	ctx context.Context,
+	parent ID,
+	name string,
+	icon string,
+	seq int,
+	meta dict.Dict,
 	call func(ctx context.Context, chnM *ChnM) error,
 ) error {
 	if parent == 0 {
@@ -81,14 +111,17 @@ func Add(
 		Name:   name,
 		Icon:   icon,
 		Seq:    seq,
+		Meta:   hjson.MustToBytes(defaultMeta(meta)),
 	}
 	err = hdb.Create[ChnM](tx, chnM)
 	if err != nil {
 		return err
 	}
-	err = call(ctx, chnM)
-	if err != nil {
-		return err
+	if call != nil {
+		err = call(ctx, chnM)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -155,6 +188,20 @@ func db(ctx context.Context) *gorm.DB {
 	return tx
 }
 
+func GetByID(ctx context.Context, id ID) (*Channel, error) {
+	if id == 0 {
+		return nil, fmt.Errorf("require valid channel id")
+	}
+	chnM, err := hdb.Get[ChnM](db(ctx), "id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	if chnM == nil {
+		return nil, fmt.Errorf("channel not found")
+	}
+	return chnM.ToChannel(), nil
+}
+
 func Update(ctx context.Context, ch *Channel) error {
 	if ch == nil || ch.ID == 0 {
 		return fmt.Errorf("require valid channel id")
@@ -184,6 +231,18 @@ func Update(ctx context.Context, ch *Channel) error {
 	if ch.Seq != chnM.Seq {
 		updateFields["seq"] = ch.Seq
 	}
+	if ch.Meta != nil {
+		currentMeta := dict.NewDict()
+		if len(chnM.Meta) > 0 {
+			currentMeta = *hjson.MustFromBytes[dict.Dict](chnM.Meta)
+			if currentMeta == nil {
+				currentMeta = dict.NewDict()
+			}
+		}
+		if !reflect.DeepEqual(ch.Meta, currentMeta) {
+			updateFields["meta"] = hjson.MustToBytes(ch.Meta)
+		}
+	}
 
 	if len(updateFields) == 0 {
 		return fmt.Errorf("no fields to update")
@@ -193,6 +252,28 @@ func Update(ctx context.Context, ch *Channel) error {
 		return err
 	}
 	return nil
+}
+
+func Delete(ctx context.Context, id ID) error {
+	if id == 0 {
+		return fmt.Errorf("require valid channel id")
+	}
+	tx := db(ctx)
+	chnM, err := hdb.Get[ChnM](tx, "id = ?", id)
+	if err != nil {
+		return err
+	}
+	if chnM == nil {
+		return fmt.Errorf("channel not found")
+	}
+	existChild, err := hdb.Exist[ChnM](tx, "parent = ?", id)
+	if err != nil {
+		return err
+	}
+	if existChild {
+		return fmt.Errorf("channel has children")
+	}
+	return hdb.Delete[ChnM](tx, "id = ?", id)
 }
 
 func List(ctx context.Context, biz collar.Collar, available *bool, parent ID) ([]*Channel, error) {
@@ -220,4 +301,11 @@ func List(ctx context.Context, biz collar.Collar, available *bool, parent ID) ([
 		arr = append(arr, item.ToChannel())
 	}
 	return arr, nil
+}
+
+func defaultMeta(meta dict.Dict) dict.Dict {
+	if meta == nil {
+		return dict.NewDict()
+	}
+	return meta
 }

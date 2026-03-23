@@ -3,6 +3,7 @@ package channel
 import (
 	"fmt"
 	"github.com/hootuu/helix/components/htree"
+	"github.com/hootuu/hyle/data/dict"
 	"github.com/hootuu/hyle/hypes/collar"
 )
 
@@ -23,6 +24,7 @@ type Channel struct {
 	Name      string     `json:"name"`
 	Icon      string     `json:"icon"`
 	Seq       int        `json:"seq"`
+	Meta      dict.Dict  `json:"meta"`
 	Children  []*Channel `json:"children"`
 	Available bool       `json:"available"`
 }
