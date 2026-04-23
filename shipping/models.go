@@ -1,9 +1,10 @@
 package shipping
 
 import (
+	"time"
+
 	"github.com/hootuu/helix/storage/hdb"
 	"gorm.io/datatypes"
-	"time"
 )
 
 type ShipM struct {
@@ -25,4 +26,20 @@ type ShipM struct {
 
 func (m *ShipM) TableName() string {
 	return "hyper_shipping"
+}
+
+type ShipPkgM struct {
+	hdb.Template
+	ID          ID          `gorm:"column:id;primaryKey;autoIncrement:false;"`
+	ShippingID  ID          `gorm:"column:shipping_id;index:uk_shipping_pkg_seq;autoIncrement:false;"`
+	BizCode     string      `gorm:"column:biz_code;index:idx_shipping_pkg_biz;size:32;"`
+	BizID       string      `gorm:"column:biz_id;index:idx_shipping_pkg_biz;index:idx_shipping_pkg_biz_id;size:128;"`
+	PackageSeq  int         `gorm:"column:package_seq;uniqueIndex:uk_shipping_pkg_seq;"`
+	CourierCode CourierCode `gorm:"column:courier_code;size:32;"`
+	TrackingNo  string      `gorm:"column:tracking_no;size:64;"`
+	IsPrimary   bool        `gorm:"column:is_primary;"`
+}
+
+func (m *ShipPkgM) TableName() string {
+	return "hyper_shipping_package"
 }

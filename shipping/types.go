@@ -2,10 +2,11 @@ package shipping
 
 import (
 	"errors"
+	"time"
+
 	"github.com/hootuu/hyle/hfsm"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/address"
-	"time"
 )
 
 type ID = uint64
@@ -24,6 +25,20 @@ type Shipping struct {
 	LastSyncedAt *time.Time  `json:"last_synced_at"` // 最后一次查询物流的时间（避免频繁调用第三方）
 	Status       Status      `json:"status"`         // 当前物流状态（使用预定义状态常量）
 	Ex           *ex.Ex      `json:"ex"`             // 扩展信息
+}
+
+type ShippingPackage struct {
+	ID          ID          `json:"id"`
+	ShippingID  ID          `json:"shipping_id"`
+	PackageSeq  int         `json:"package_seq"`
+	CourierCode CourierCode `json:"courier_code"`
+	TrackingNo  string      `json:"tracking_no"`
+	IsPrimary   bool        `json:"is_primary"`
+}
+
+type ShippingInfo struct {
+	Shipping *Shipping          `json:"shipping"`
+	Packages []*ShippingPackage `json:"packages"`
 }
 
 type Address struct {

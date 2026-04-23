@@ -9,6 +9,7 @@ func doDbInit() error {
 	if hsys.RunMode().IsRd() {
 		err := hyperplt.DB().AutoMigrate(
 			&ShipM{},
+			&ShipPkgM{},
 		)
 		if err != nil {
 			return err
