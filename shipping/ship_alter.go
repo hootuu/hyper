@@ -133,6 +133,9 @@ func (paras *ReplacePackagesParams) Validate() error {
 
 func ReplacePackagesByOrderID(ctx context.Context, paras *ReplacePackagesParams) error {
 	InitIfNeeded()
+	if paras == nil {
+		return errors.New("params is required")
+	}
 	if err := paras.Validate(); err != nil {
 		return err
 	}
@@ -163,7 +166,11 @@ func ReplacePackagesByOrderID(ctx context.Context, paras *ReplacePackagesParams)
 		pkgArr := make([]*ShipPkgM, 0, len(paras.Packages))
 		for i, pkg := range paras.Packages {
 			pkgArr = append(pkgArr, &ShipPkgM{
-				Template:    shipM.Template,
+				Template: hdb.Template{
+					Ctrl: shipM.Ctrl,
+					Tag:  shipM.Tag,
+					Meta: shipM.Meta,
+				},
 				ID:          nxtShippingID(),
 				ShippingID:  shipM.ID,
 				BizCode:     shipM.BizCode,
