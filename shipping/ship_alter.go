@@ -9,6 +9,7 @@ import (
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyper/hyperplt"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -105,4 +106,74 @@ func UpdateAddrInfo(ctx context.Context, params UpdateAddrParams) error {
 	return hdb.Update[ShipM](hyperplt.Tx(ctx), map[string]any{
 		"address": hjson.MustToBytes(addrMap),
 	}, "biz_id = ?", params.OrderId)
+}
+
+type ReplacePackagesParams struct {
+	OrderId  string               `json:"order_id"`
+	Packages []*CreatePackageItem `json:"packages"`
+}
+
+func (paras *ReplacePackagesParams) Validate() error {
+	if paras == nil {
+		return errors.New("params is required")
+	}
+	if paras.OrderId == "" {
+		return errors.New("order_id is required")
+	}
+	if len(paras.Packages) == 0 {
+		return errors.New("packages is required")
+	}
+	for i := range paras.Packages {
+		if err := paras.Packages[i].Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ReplacePackagesByOrderID(ctx context.Context, paras *ReplacePackagesParams) error {
+	InitIfNeeded()
+	if err := paras.Validate(); err != nil {
+		return err
+	}
+
+	return hdb.Tx(hyperplt.Tx(ctx), func(tx *gorm.DB) error {
+		shipM, err := hdb.Get[ShipM](tx, "biz_id = ?", paras.OrderId)
+		if err != nil {
+			return err
+		}
+		if shipM == nil {
+			return fmt.Errorf("shipping not found by order_id: %s", paras.OrderId)
+		}
+
+		primary := paras.Packages[0]
+		err = hdb.Update[ShipM](tx, map[string]any{
+			"courier_code": primary.CourierCode,
+			"tracking_no":  primary.TrackingNo,
+		}, "id = ?", shipM.ID)
+		if err != nil {
+			return err
+		}
+
+		err = hdb.Delete[ShipPkgM](tx, "shipping_id = ?", shipM.ID)
+		if err != nil {
+			return err
+		}
+
+		pkgArr := make([]*ShipPkgM, 0, len(paras.Packages))
+		for i, pkg := range paras.Packages {
+			pkgArr = append(pkgArr, &ShipPkgM{
+				Template:    shipM.Template,
+				ID:          nxtShippingID(),
+				ShippingID:  shipM.ID,
+				BizCode:     shipM.BizCode,
+				BizID:       shipM.BizID,
+				PackageSeq:  i + 1,
+				CourierCode: pkg.CourierCode,
+				TrackingNo:  pkg.TrackingNo,
+				IsPrimary:   i == 0,
+			})
+		}
+		return hdb.MultiCreate[ShipPkgM](tx, pkgArr)
+	})
 }

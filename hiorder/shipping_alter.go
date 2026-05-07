@@ -70,6 +70,22 @@ func UpdateShipping(ctx context.Context, orderId, courierCode, trackingNo string
 	}, "id = ?", orderId)
 }
 
+func UpdateShippingBatch(ctx context.Context, paras *shipping.ReplacePackagesParams) error {
+	if paras == nil {
+		return errors.New("params is required")
+	}
+	if paras.OrderId == "" {
+		return errors.New("order_id is required")
+	}
+	err := shipping.ReplacePackagesByOrderID(ctx, paras)
+	if err != nil {
+		return err
+	}
+	return hdb.Update[OrderM](hyperplt.Tx(ctx), map[string]any{
+		"updated_at": time.Now(),
+	}, "id = ?", paras.OrderId)
+}
+
 func UpdateShippingAddr(ctx context.Context, params shipping.UpdateAddrParams) error {
 	if params.OrderId == "" {
 		return errors.New("order_id is required")
