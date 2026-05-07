@@ -185,30 +185,45 @@ func CreateBatch(ctx context.Context, paras *CreateBatchParas) (result *CreateBa
 	}
 
 	err = hdb.Tx(hyperplt.Tx(ctx), func(tx *gorm.DB) error {
-		shippingID := nxtShippingID()
+		var shippingID uint64
 		exM := ex.MustEx(paras.Ex)
 		primary := paras.Packages[0]
 		submittedAt := time.Now()
 
-		shippingM := &ShipM{
-			Template: hdb.Template{
-				Ctrl: exM.Ctrl,
-				Tag:  hjson.MustToBytes(exM.Tag),
-				Meta: hjson.MustToBytes(exM.Meta),
-			},
-			ID:               shippingID,
-			BizCode:          paras.BizCode,
-			BizID:            paras.BizID,
-			CourierCode:      primary.CourierCode,
-			TrackingNo:       primary.TrackingNo,
-			Status:           Submitted,
-			Address:          hjson.MustToBytes(paras.Address),
-			Timeout:          paras.Timeout,
-			TimeoutCompleted: false,
-			SubmittedTime:    &submittedAt,
-		}
-		if err = hdb.Create[ShipM](tx, shippingM); err != nil {
+		shippingM, err := hdb.Get[ShipM](tx, "biz_id = ?", paras.BizID)
+		if err != nil {
 			return err
+		}
+		if shippingM != nil {
+			shippingID = shippingM.ID
+			_, err = hdb.UpdateX[ShipM](tx, map[string]any{
+				"courier_code":   primary.CourierCode,
+				"tracking_no":    primary.TrackingNo,
+				"status":         Submitted,
+				"submitted_time": submittedAt,
+			}, "id = ?", shippingID)
+		} else {
+			shippingID = nxtShippingID()
+			shippingM = &ShipM{
+				Template: hdb.Template{
+					Ctrl: exM.Ctrl,
+					Tag:  hjson.MustToBytes(exM.Tag),
+					Meta: hjson.MustToBytes(exM.Meta),
+				},
+				ID:               shippingID,
+				BizCode:          paras.BizCode,
+				BizID:            paras.BizID,
+				CourierCode:      primary.CourierCode,
+				TrackingNo:       primary.TrackingNo,
+				Status:           Submitted,
+				Address:          hjson.MustToBytes(paras.Address),
+				Timeout:          paras.Timeout,
+				TimeoutCompleted: false,
+				SubmittedTime:    &submittedAt,
+			}
+			if err = hdb.Create[ShipM](tx, shippingM); err != nil {
+				return err
+			}
 		}
 		result.ShippingID = shippingID
 
