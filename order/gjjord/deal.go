@@ -2,14 +2,12 @@ package gjjord
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/hootuu/hyle/hlog"
 	"github.com/hootuu/hyle/hypes/ex"
 	"github.com/hootuu/hyper/hiorder"
 	"github.com/nineora/lightv/lightv"
-	"github.com/nineora/lightv/qing"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 )
@@ -106,6 +104,13 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 				}
 			}
 
+			// 2026-06-15 17:00:00 之后的订单， 退款或者完成不再处理奖励
+			rewardTime := time.Date(2026, 6, 15, 17, 0, 0, 0, time.Local)
+			noDealReward := orderM.ConsensusTime.After(rewardTime)
+			if noDealReward {
+				return
+			}
+
 			if target == hiorder.Refunded {
 				if awErr = lightv.AwardOrderCancel(ctx, isLock, orderID, buyer, d.Code(), newEx); awErr != nil {
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderCancel failed", ctx, awErr)
@@ -118,15 +123,10 @@ func (d *Deal) After(ctx context.Context, src hiorder.Status, target hiorder.Sta
 					hlog.TraceErr("gjjord.Deal.After: AwardOrderComplete failed", ctx, awErr)
 					return
 				}
-				cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
-				totalCost := cost * d.ord.Matter.Count
-				if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, newEx, 10000, qing.GJJTerrRadioMap); awErr != nil {
-					hlog.TraceFix(fmt.Sprintf("lightv.AwardByOrder: TerrTaxing failed for order %d", orderID), ctx, awErr, zap.Uint64("orderID", orderID))
-					return
-				}
-				//_, awErr = lightv.DispatchTerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, 10000)
-				//if awErr != nil {
-				//	hlog.TraceErr("gjjord.Deal.After: DispatchTerrTaxing failed", ctx, awErr, zap.Uint64("orderID", orderID))
+				//cost := cast.ToUint64(d.ord.Ex.Meta.Get("product.cost").Data())
+				//totalCost := cost * d.ord.Matter.Count
+				//if awErr = lightv.Assets.TerrTaxing(ctx, cast.ToString(orderID), d.Code(), buyer, amount-totalCost, newEx, 10000, qing.GJJTerrRadioMap); awErr != nil {
+				//	hlog.TraceFix(fmt.Sprintf("lightv.TerrTaxing: TerrTaxing failed for order %d", orderID), ctx, awErr, zap.Uint64("orderID", orderID))
 				//	return
 				//}
 			}
