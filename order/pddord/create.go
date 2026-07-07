@@ -73,7 +73,7 @@ func (f *Factory) Create(ctx context.Context, paras *CreateParas) (*hiorder.Orde
 		return nil, err
 	}
 	order := engine.GetOrder()
-	go ttListenOrderTimeout(ctx, order.ID, 2*time.Hour)
+	go ttListenOrderTimeout(ctx, order.ID, 10*time.Minute)
 
 	return order, nil
 }
